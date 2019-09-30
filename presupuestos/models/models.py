@@ -343,7 +343,7 @@ class budget_rescheduling(models.Model):# modelo para Control de recalendarizaci
     geographic_location_id = fields.Many2one('budget.geographic.location',string="Ubicación geográfica",required=True)
     key_portfolio_id = fields.Many2one('budget.key.portfolio',string="Clave cartera",required=True)
     move_id = fields.Many2one('account.move',string="Asiento contable")
-
+    
 class inherit_campos_nuevos_account(models.Model):#campos adicionales a este modelo Validación del presupuesto, solicitudes de pago.
     _inherit = 'account.invoice.line'
 
@@ -366,7 +366,17 @@ class inherit_campos_nuevos_account(models.Model):#campos adicionales a este mod
     stage = fields.Many2one('budget.stage',string="Etapa")
     agreement_type_id = fields.Many2one('budget.agreement.type',string="Tipo de convenio")
     agreement_number = fields.Many2one('agreement.agreement',string="Número de convenio")
+
+class caampos_accon_inhe(models.Model):
+    _inherit  = 'account.invoice'
+
     
+    sub_state = fields.Selection([('so','Solicitud'),('ap','Aprovado'),('app','Aprovado para pago'),('ma','Medio de pago asignado'),('pa','Pagado'),('re','Rechazado'),('ca','Cancelado'),('pna','Pago no aplicado'),('mpc','Medio de pago cancelado'),('rpp','Rechazado por pago')],string="Sub-Estado",required=True)
+
+
+
+
+
 
 
 
