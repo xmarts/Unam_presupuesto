@@ -1376,9 +1376,8 @@
               <label for="name" string="Note" attrs="{'invisible': [('display_type', '!=', 'line_note')]}"/>
               <field name="name"/>
         </form> 
+        
       </xpath>
-    </field>
-  </record>
     </field>
   </record> 
 
