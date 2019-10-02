@@ -5,7 +5,6 @@ from odoo.exceptions import ValidationError, UserError
 from datetime import datetime, date, timedelta
 
 
-
 class budget_program(models.Model):
     _name = 'budget.program'
 
@@ -13,8 +12,22 @@ class budget_program(models.Model):
     name = fields.Char(string="Nombre",required=True)
     budget_subprogam_id = fields.Many2one('budget.subprogram',string="Subprograma")
 
-class budget_subprogram(models.Model):
-#se crea este modelo  SubPrograma (SP) con los siguientes campos 
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)<=1:
+                    obj.code = '0'+obj.code
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.program'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
+
+class budget_subprogram(models.Model):#se crea este modelo  SubPrograma (SP) con los siguientes campos 
     _name = 'budget.subprogram'
 
     code =  fields.Char(string="Código",required=True,size=2)
@@ -22,6 +35,21 @@ class budget_subprogram(models.Model):
     branch_id = fields.Many2one('res.branch',string="Dependencia",required=True,)
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencia",required=True)
     program_id = fields.Many2one('budget.program',string="Programa",required=True)
+    
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)<=1:
+                    obj.code = '0'+obj.code
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.subprogram'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
 class campos_nuevos_branch(models.Model):#Este es un inherit al modelo del branch ,Dependencia (DEP).
     _inherit = 'res.branch'
@@ -32,12 +60,44 @@ class campos_nuevos_branch(models.Model):#Este es un inherit al modelo del branc
     No_dependence = fields.Char(string="No. entidad o dependencia",required=True)
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencias")
 
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)==1:
+                    obj.code = '00'+obj.code
+                if len(val)==2:
+                    obj.code = '0'+obj.code 
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['res.branch'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
+
 class  budget_subdependence(models.Model):#Modelo Subdependencia (SD)
     _name = 'budget.subdependence'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
     branch_id = fields.Many2one('res.branch',string="Dependencia",required=True,)
+
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)<=1:
+                    obj.code = '0'+obj.code
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.subdependence'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único por dependencia'))
 
 class budget_item(models.Model):#Modelo para Partida de Gasto (PAR).
     _name = 'budget.item'
@@ -51,6 +111,23 @@ class budget_item(models.Model):#Modelo para Partida de Gasto (PAR).
     expense_account = fields.Many2one('account.account',string="Cuenta de gastos",required=True)
     debtor_account = fields.Many2one('account.account', string="Cuenta pasivo deudora",required=True)
 
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)==1:
+                    obj.code = '00'+obj.code
+                if len(val)==2:
+                    obj.code = '0'+obj.code 
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.item'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
+
 class budget_resource_origin(models.Model):#Modelo para Origen del Recurso(OR).
     _name = 'budget.resource.origin'
 
@@ -60,11 +137,56 @@ class budget_resource_origin(models.Model):#Modelo para Origen del Recurso(OR).
     is_income_owne2 = fields.Boolean(string='No')
     observations = fields.Char(string="Observaciones")
 
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)<=1:
+                    obj.code = '0'+obj.code
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.resource.origin'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
+
+    #funcion para solo selecionar u solo boleano         
+    @api.onchange('is_income_owne','is_income_owne2')
+    def _onchange_seletion(self):
+        if  self.is_income_owne == True:
+            self.is_income_owne2 = False
+        elif self.is_income_owne ==False: 
+            self.is_income_owne2 == True    
+
 class budget_institutional_activity(models.Model):# Modelo para Actividad Institucional(AI).
     _name = 'budget.institutional.activity'
 
     code = fields.Char(string="Código",required=True,size=5)
     name = fields.Char(string="Nombre",required=True)
+
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)==1:
+                    obj.code = '0000'+obj.code
+                if len(val)==2:
+                    obj.code = '000'+obj.code 
+                if len(val)==3:
+                    obj.code = '00'+obj.code
+                if len(val)==4:
+                    obj.code ='0'+obj.code        
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.institutional.activity'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
+
 
 class budget_program_conversion(models.Model):#modelo para Conversión de Programa Presupuestario(CONPP).
     _name = 'budget.program.conversion'
@@ -73,6 +195,19 @@ class budget_program_conversion(models.Model):#modelo para Conversión de Progra
     name = fields.Char(string="Nombre",required=True)
     cogshcp_id = fields.Many2one('budget.item.conversion',string="PP SHCP",required=True)
     activity = fields.Selection([('bachillerato','Bachillerato'),('licenciatura','Licenciatura'),('posgrado','Posgrado'),('becas','Becas'),('cultura','Cultura'),('mantenimiento','Mantenimiento'),('obras','Obras')],string="Actividad",required=True)
+
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit()==False:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.program.conversion'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
+
+
 
 class budget_item_conversion(models.Model):#modelo para Conversión con partida (CONPA).
     _name = 'budget.item.conversion'
@@ -83,17 +218,70 @@ class budget_item_conversion(models.Model):#modelo para Conversión con partida 
     type_item = fields.Selection([('Regulada','R'),('Centralizada','C'),('Directa','D')],string="Tipo de ejercicio",required=True)
     cogconac_id = fields.Many2one('budget.cog.conac',string="COG CONAC",required=True)
 
+
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)==1:
+                    obj.code = '0000'+obj.code
+                if len(val)==2:
+                    obj.code = '000'+obj.code 
+                if len(val)==3:
+                    obj.code = '00'+obj.code
+                if len(val)==4:
+                    obj.code ='0'+obj.code        
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.item.conversion'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único por partida.'))
+
+
 class budget_expense_type(models.Model):# modelo para Tipo de gasto (TG).
     _name = 'budget.expense.type'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
+    
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)<=1:
+                    obj.code = '0'+obj.code
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.expense.type'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
 class budget_geographic_location(models.Model):#modelo para Ubicación Geográfica (UG).
     _name = 'budget.geographic.location'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
+    
+    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+    @api.constrains('code')
+    def _check_code(self):
+        for obj in self: 
+            val = obj.code
+            if val.isdigit():
+                if len(val)<=1:
+                    obj.code = '0'+obj.code
+            else:
+                raise ValidationError(_('Valor Invalido'))
+        rec = self.env['budget.geographic.location'].search(
+        [('code', '=', self.code),('id', '!=', self.id)])
+        if rec:
+            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
 class budget_key_portfolio(models.Model):#modelo Clave cartera(CC).
     _name = 'budget.key.portfolio'
