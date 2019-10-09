@@ -13,8 +13,8 @@
            <sheet>
               <group>
                 <group>                  
-                  <field name="code"/>                  
-                  <field name="name"/>
+                  <field name="code" />                  
+                  <field name="name"/> 
                 </group>
                 <group>
                   <field name="budget_subprogam_id"/>                  
@@ -40,7 +40,7 @@
     <act_window
       id="action_Programa"
       name="Programas"
-      res_model="budget.program"
+      res_model="budget.program" 
       view_mode="tree,form"
     />
    <!--vista y fomulario de Catálogo SubPrograma--> 
@@ -200,7 +200,7 @@
                 <field name="name"/>
               </group>
               <group>
-                <span>Es ingreso propio</span>
+                <p class="font-weight-bold" >Es ingreso propio</p>
                 <field name="is_income_owne"/>
                 <field name="is_income_owne2"/>
                 <field name="observations"/>
@@ -1147,15 +1147,20 @@
     <field name="arch" type="xml">
       <!--el campo code ba antes de nombre-->
       <xpath expr="//field[@name='user_id']" position="before">
-        <group>            
+        <group>
+            <field name="code"/>         
             <field name="sub_type"/>
-            <field name="type_project_id"/>         
+            <field name="type_project_id"/>
+            <field name="date_start1"/>        
         </group>
         <group>
+          <field name="date1"/>
           <field name="amount_allocated"/>
           <field name="consumed_amount"/>
         </group> 
       </xpath>
+
+
     </field>
   </record> 
 <!--Asientos contables. modelo  account.move.lines -->
@@ -1199,25 +1204,20 @@
     <field name="inherit_id" ref="account_budget.crossovered_budget_view_form"/>
     <field name="arch" type="xml">
     <xpath expr="//button[@name='action_budget_confirm']" position="after">
-      <button name="function_name" states="draft" string="Importar presupuesto" type="object"/>     
+      <button name="leer_archivo"   string="Importar presupuesto" type="object" class="oe_highlight" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>     
     </xpath>
 
      <!--despues del page-->
-      <xpath expr="//page[1]" position="after">
-        <page string="Cambios">
-          <group>
-            <group>
-              <field name="file_import"/>
-              <field name="total_budget"/>
-              <field name="record_numbers"/>
-            </group>
-            <group>              
-              <field name="imported_registration_numbers"/>
-              <field name="budget_of_project_dgpo"/>
-              <field name="move_id"/>
-            </group>
-          </group>
-        </page>
+      <xpath expr="//field[@name='user_id']" position="after">
+         <field name="budget_of_project_dgpo"/>
+        <field name="file_import" widget="binary" filename="filename" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>
+        <field name="filename" invisible="1"/>
+        <field name="total_budget" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>
+      </xpath>
+      <xpath expr="//field[@name='company_id']" position="after" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}">        
+        <field name="record_numbers" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>             
+        <field name="imported_registration_numbers" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>
+        <field name="move_id" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>
       </xpath>
     </field>
   </record>
@@ -1287,6 +1287,7 @@
   </record> 
 
 <!--inherit Validación del presupuesto, solicitudes de pago.-->
+
 <record id="inherit_solicitudes_presu" model="ir.ui.view">
   <field name="name">inherit_solicitudes_presu</field>
   <field name="model">account.invoice</field>
@@ -1376,10 +1377,11 @@
               <label for="name" string="Note" attrs="{'invisible': [('display_type', '!=', 'line_note')]}"/>
               <field name="name"/>
         </form> 
-        
       </xpath>
     </field>
   </record> 
+
+
 
   </data>
 </odoo>
