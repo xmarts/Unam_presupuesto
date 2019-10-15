@@ -57,7 +57,7 @@
               <group>                  
                 <field name="code"/>                  
                 <field name="name"/>
-                <field name="branch_id"/>
+                <!--<field name="branch_id"/>-->
               </group>
               <group>  
                 <field name="subdependence_id"/> 
@@ -76,7 +76,7 @@
           <tree >              
             <field name="code"/>
             <field name="name"/>
-            <field name="branch_id"/>            
+            <!--<field name="branch_id"/>-->            
             <field name="subdependence_id"/> 
             <field name="program_id"/>    
           </tree>
@@ -107,7 +107,7 @@
                 <field name="name"/>
               </group>
               <group>                
-                <field name="branch_id"/>                
+               <!-- <field name="branch_id"/>  -->              
               </group>
             </group>
          </sheet> 
@@ -122,7 +122,7 @@
           <tree >      
             <field name="code"/>                  
             <field name="name"/>
-            <field name="branch_id"/>                 
+            <!--<field name="branch_id"/>  -->               
           </tree>
       </field>
     </record> 
@@ -621,7 +621,7 @@
                 <field name="agreement_type_id"/>
               </group>
               <group>
-                <field name="branch_id"/>
+                <!--<field name="branch_id"/>-->
                 <field name="budget_subdependence_id"/>
               </group>
             </group>
@@ -638,7 +638,7 @@
           <field name="code"/>
           <field name="name"/>
           <field name="agreement_type_id"/>
-          <field name="branch_id"/>
+          <!--<field name="branch_id"/>-->
           <field name="budget_subdependence_id"/>                
         </tree>
     </field>
@@ -705,10 +705,12 @@
                 <field name="sequence"/>
                 <field name="name"/>
                 <field name="catalog_id"/>
+                <field name="to_search_field"/>
               </group>
               <group> 
                 <field name="position_from"/>
                 <field name="position_to"/>
+                <field name="code_part_pro"/>
               </group>
             </group>
          </sheet> 
@@ -725,7 +727,8 @@
           <field name="name"/>
           <field name="catalog_id"/>
           <field name="position_from"/>
-          <field name="position_to"/>                
+          <field name="position_to"/> 
+          <field name="code_part_pro"/>               
         </tree>
     </field>
   </record> 
@@ -824,7 +827,7 @@
                 <field name="amount"/> 
                 <field name="date"/>                 
                 <field name="allocated_deposit_id"/>
-                <field name="branch_id"/> 
+                <!--<field name="branch_id"/> -->
                 <field name="subdependence_id"/> 
                 <field name="program_id"/> 
                 <field name="subprogram_id"/>
@@ -856,7 +859,7 @@
           <field name="amount"/> 
           <field name="date"/>                 
           <field name="allocated_deposit_id"/>
-          <field name="branch_id"/> 
+          <!--<field name="branch_id"/> -->
           <field name="subdependence_id"/> 
           <field name="program_id"/> 
           <field name="subprogram_id"/>                
@@ -907,7 +910,7 @@
                       <field name="adjustement_id"/>
                       <field name="type"/>
                       <field name="amount"/>
-                      <field name="branch_id"/>
+                     <!-- <field name="branch_id"/>-->
                       <field name="subdependence_id"/>
                       <field name="program_id"/>
                       <field name="subprogram_id"/>
@@ -1025,7 +1028,7 @@
                 <field name="budget_id"/>
                 <field name="to_period"/>
                 <field name="import_recalendarization_id"/>
-                <field name="branch_id"/>
+               <!-- <field name="branch_id"/>-->
                 <field name="subdependence_id"/>
                 <field name="program_id"/>
                 <field name="subprogram_id"/>
@@ -1056,7 +1059,7 @@
         <tree >
           <field name="code"/>
           <field name="to_period"/>
-          <field name="branch_id"/>
+          <!--<field name="branch_id"/>-->
           <field name="subdependence_id"/>
           <field name="date"/> 
           <field name="expense_type_id"/>
@@ -1077,7 +1080,8 @@
 
   <!--menus todos aki-->
   <menuitem id="Programas_root" name="Presupuestos"/> 
-        <!--menut de control presupuesto y submenuts-->
+        <!--menut de control presupuesto y submenuts-->     
+
   <menuitem id="id_menu_uno" name="Control de Presupuestos" parent="Programas_root" action=""/>
    <menuitem id="id_menut_control_montos_asig" name="Control de Montos" parent="id_menu_uno" action="action_control_montos_asig" sequence="0"/>   
    <menuitem id="id_menut_control_monto_dos" name="Control dos" parent="id_menu_uno" action="action_budget_am_all_lines" sequence="1"/>
@@ -1113,23 +1117,23 @@
   <menuitem id="id_menut_tipo_convenio" name="Tipos de convenio" parent="id_menu_cuatro_2" action="action_tipo_convenio" sequence="14"/>
   <menuitem id="id_menut_convenio_nc" name="Convenio" parent="id_menu_cuatro_2" action="action_convenios_nc" sequence="15"/>
   <menuitem id="id_menut_catalogo_gog" name="Catálogo COG CONAC" parent="id_menu_cuatro_2" action="action_catalogo_cog" sequence="16"/>
-  <menuitem id="id_menut_orden_codigo" name="Orden del código programático" parent="id_menu_cuatro_2" action="action_Orden_codigo_pro" sequence="17"/>
+  <menuitem id="id_menut_orden_codigo" name="Orden del código programático" parent="id_menu_cuatro_2" action="action_Orden_codigo_pro" sequence="17"/> 
 
       
 
 
-  <!--inherit al modelo de branch aqui empieza--> 
+  <!--inherit al modelo de branch aqui empieza
   <record id="Dependencia_inherit_branch" model="ir.ui.view">
     <field name="name">Dependencia.inherit.branch</field>
     <field name="model">res.branch</field>
     <field name="inherit_id" ref="branch.branch_res_branch_view_form"/>
     <field name="arch" type="xml">
-      <!--el campo code ba antes de nombre-->
+      <!el campo code ba antes de nombre
       <xpath expr="//field[@name='name']" position="before">
         <field name="code"/>
       </xpath>
 
-      <!--los demas campos van despues de   -->
+      <los demas campos van despues de   
       <xpath expr="//field[@name='address']" position="after">
         <field name="head"/>
         <field name="secretary"/>
@@ -1137,7 +1141,7 @@
         <field name="subdependence_id"/>
       </xpath>
     </field>
-  </record> 
+  </record> -->
 
   <!--inherit al modleo de project Proyectos (NP).--> 
   <record id="proyect_inherit_project" model="ir.ui.view">
@@ -1147,19 +1151,20 @@
     <field name="arch" type="xml">
       <!--el campo code ba antes de nombre-->
       <xpath expr="//field[@name='user_id']" position="before">
-        <group>
-            <field name="code"/>         
-            <field name="sub_type"/>
-            <field name="type_project_id"/>
-            <field name="date_start1"/>        
-        </group>
-        <group>
-          <field name="date1"/>
-          <field name="amount_allocated"/>
-          <field name="consumed_amount"/>
-        </group> 
+        <field name="code"/>    
       </xpath>
 
+      <xpath expr="//field[@name='partner_id']" position="after">                 
+        <field name="sub_type"/>
+        <field name="type_project_id"/>
+        <field name="date_start1"/>  
+      </xpath>
+      
+      <xpath expr="//field[@name='company_id']" position="after">        
+        <field name="date1"/>
+        <field name="amount_allocated"/>
+        <field name="consumed_amount"/> 
+      </xpath>
 
     </field>
   </record> 
@@ -1174,7 +1179,7 @@
         <page string="Cambios">
           <group>
             <group>
-              <field name="branch_id"/>
+             <!-- <field name="branch_id"/>-->
               <field name="subdependence_id"/>
               <field name="program_id"/>
               <field name="subprogram_id"/>
@@ -1203,9 +1208,9 @@
     <field name="model">crossovered.budget</field>
     <field name="inherit_id" ref="account_budget.crossovered_budget_view_form"/>
     <field name="arch" type="xml">
-    <xpath expr="//button[@name='action_budget_confirm']" position="after">
-      <button name="leer_archivo"   string="Importar presupuesto" type="object" class="oe_highlight" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>     
-    </xpath>
+      <xpath expr="//button[@name='action_budget_confirm']" position="after">
+        <button name="leer_archivo"   string="Importar presupuesto" type="object" class="oe_highlight" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>  
+      </xpath>
 
      <!--despues del page-->
       <xpath expr="//field[@name='user_id']" position="after">
@@ -1218,11 +1223,24 @@
         <field name="record_numbers" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>             
         <field name="imported_registration_numbers" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>
         <field name="move_id" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>
+        <field name="prueba"/>
+      </xpath>
+      <xpath expr="//page" position="after">
+        <page string="líneas incorrectas txt"  attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}">
+          <sheet>
+            <field name="tabla_invalidos">
+              <tree string="Incorrectos" editable="bottom">
+                <field name="code"/>
+                <field name="description"/>
+               </tree> 
+            </field>  
+          </sheet>
+        </page>
       </xpath>
     </field>
   </record>
 
-<!--inherits al modelo  Líneas del presupuesto model  crossovered.budget.lines-->
+  <!--inherits al modelo  Líneas del presupuesto model  crossovered.budget.lines-->
 <record id="id_cnuev_crossovered_budeget_lines" model="ir.ui.view">
     <field name="name">id.cnuev.crossovered.budeget.lines</field>
     <field name="model">crossovered.budget</field>
@@ -1267,7 +1285,7 @@
         <field name="amount_modified"/>
         <field name="amount_available2"/>
         <field name="programmatic_account"/>
-        <field name="branch_id"/>
+        <!--<field name="branch_id"/>-->
       </xpath>
       
        <xpath expr="//field[@name='crossovered_budget_line']//form//field[@name='paid_date']" position="after">
@@ -1285,69 +1303,25 @@
        </xpath> 
     </field>
   </record> 
-
 <!--inherit Validación del presupuesto, solicitudes de pago.-->
 
 <record id="inherit_solicitudes_presu" model="ir.ui.view">
   <field name="name">inherit_solicitudes_presu</field>
-  <field name="model">account.invoice</field>
-  <field name="inherit_id" ref="account.invoice_form"/>
+  <field name="model">account.move</field>
+  <field name="inherit_id" ref="account.view_move_form"/>
   <field name="arch" type="xml">
 
-    <xpath expr="//field[@name='team_id']" position="after">
+    <xpath expr="//field[@name='invoice_date']" position="after">
       <field name="sub_state"/>
-      
     </xpath>
-    <!--el campo despues de account_analyry_ tabla de lineas de presupuesto  de factura-->
-    <xpath expr="//field[@name='invoice_line_ids']//tree//field[@name='account_analytic_id']" position="before">
+    <xpath expr="//field[@name='invoice_line_ids']//tree//field[@name='analytic_account_id']" position="before">
       <field name="programmatic_code"/>
     </xpath>
-    </field>
-  </record> 
+    
+    <xpath expr="//field[@name='invoice_line_ids']//form//field[@name='name']" position="after">
 
-
-  <!--se remplazo el formulario para agragr los campos adiccionales que se requerian.-->
-
-
-  <record id="inherit_campos_lines_invo" model="ir.ui.view">
-    <field name="name">inherit_campos_lines_invo</field>
-    <field name="model">account.invoice.line</field>
-    <field name="inherit_id" ref="account.view_invoice_line_form"/>
-    <field name="arch" type="xml">
-      <!--el campo code ba antes de nombre-->
-      <xpath expr="//form" position="replace">
-        <form>
-          <field name="display_type" invisible="1"/>
-          <!--
-              We need the sequence field to be here for new lines to be added at the correct position.
-              TODO: at some point we want to fix this in the framework so that an invisible field is not required.
-          -->
-          <field name="sequence" invisible="1"/>
-          <group attrs="{'invisible': [('display_type', '!=', False)]}">        
             <group>
-              <field name="partner_id" invisible="1"/>
-              <field name="invoice_type" invisible="1"/>
-              <field name="company_id" invisible="1"/>
-              <field name="product_id" context="{'partner_id': partner_id}"/>
-              <label for="quantity"/>
-              <div>
-                  <field name="quantity" class="oe_inline"/>
-                  <field name="uom_id" class="oe_inline" groups="uom.group_uom"/>
-              </div>
-              <field name="price_unit"/>
-              <field name="discount" groups="base.group_no_one"/>
-              <field name="currency_id" invisible="1"/>
-             </group>
-             <group>
-              <field name="analytic_tag_ids" groups="analytic.group_analytic_accounting" widget="many2many_tags" options="{'color_field': 'color'}"/>
-              <field domain="[('company_id', '=', company_id)]" name="account_id" groups="account.group_account_user"/>
-              <field name="invoice_line_tax_ids" context="{'type': invoice_type}" domain="[('type_tax_use','!=','none'),('company_id', '=', company_id)]" widget="many2many_tags" options="{'no_create': True}"/>
-
-              <field domain="[('company_id', '=', company_id)]" name="account_analytic_id" groups="analytic.group_analytic_accounting"/>
-              <field name="analytic_tag_ids" widget="many2many_tags" groups="analytic.group_analytic_tags"/>
-              <field name="company_id" groups="base.group_multi_company" readonly="1"/>
-            </group>
-
+              
             <group>              
             <field name="programmatic_code"/>
             <field name="branch_id"/>
@@ -1370,17 +1344,13 @@
               <field name="stage"/>
               <field name="agreement_type_id"/>
               <field name="agreement_number"/>
-            </group>        
-          </group>
-              <label for="name" string="  " attrs="{'invisible': [('display_type', '!=', False)]}"/>
-              <label for="name" string="Section" attrs="{'invisible': [('display_type', '!=', 'line_section')]}"/>
-              <label for="name" string="Note" attrs="{'invisible': [('display_type', '!=', 'line_note')]}"/>
-              <field name="name"/>
-        </form> 
-      </xpath>
+            </group> 
+
+            </group> 
+     
+    </xpath>
     </field>
   </record> 
-
 
 
   </data>

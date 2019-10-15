@@ -47,3 +47,5 @@ access_tabla_budget_adjustement_line,tabla.budget.adjustement.line,model_tabla_b
 access_budget_import_recalendarization,budget.import.recalendarization,model_budget_import_recalendarization,,1,1,1,1
 
 access_budget_rescheduling,budget.rescheduling,model_budget_rescheduling,,1,1,1,1
+
+access_tabla_incorrectos,tabla.incorrectos,model_tabla_incorrectos,,1,1,1,1

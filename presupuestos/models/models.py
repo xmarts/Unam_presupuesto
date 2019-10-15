@@ -11,8 +11,9 @@ import xlrd
 from random import randint
 
 
-class budget_program(models.Model):
+class budget_program(models.Model): #modleo para el programa
     _name = 'budget.program'
+    _description = 'Programa'
 
     code =  fields.Char(string='Código',required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
@@ -35,10 +36,12 @@ class budget_program(models.Model):
 
 class budget_subprogram(models.Model):#se crea este modelo  SubPrograma (SP) con los siguientes campos 
     _name = 'budget.subprogram'
+    _description = 'SubPrograma'
 
     code =  fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
-    branch_id = fields.Many2one('res.branch',string="Dependencia",required=True,)
+
+    #branch_id = fields.Many2one('res.branch',string="Dependencia",required=True,)
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencia",required=True)
     program_id = fields.Many2one('budget.program',string="Programa",required=True)
     
@@ -57,38 +60,34 @@ class budget_subprogram(models.Model):#se crea este modelo  SubPrograma (SP) con
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
-class campos_nuevos_branch(models.Model):#Este es un inherit al modelo del branch ,Dependencia (DEP).
-    _inherit = 'res.branch'
-
-    code = fields.Char(string="Código",required=True,size=3)
-    head = fields.Many2one('hr.employee',string="Titular",required=True)
-    secretary = fields.Many2one('hr.employee',string="Secretario Administrativo",required=True)
-    No_dependence = fields.Char(string="No. entidad o dependencia",required=True)
-    subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencias")
-
-    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
-    @api.constrains('code')
-    def _check_code(self):
-        for obj in self: 
-            val = obj.code
-            if val.isdigit():
-                if len(val)==1:
-                    obj.code = '00'+obj.code
-                if len(val)==2:
-                    obj.code = '0'+obj.code 
-            else:
-                raise ValidationError(_('Valor Invalido'))
-        rec = self.env['res.branch'].search(
-        [('code', '=', self.code),('id', '!=', self.id)])
-        if rec:
-            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
+#class campos_nuevos_branch(models.Model):#Este es un inherit al modelo del branch ,Dependencia (DEP).
+#    _inherit = 'res.branch'
+#    code = fields.Char(string="Código",required=True,size=3)
+#    head = fields.Many2one('hr.employee',string="Titular",required=True)
+#    secretary = fields.Many2one('hr.employee',string="Secretario Administrativo",required=True)#No_dependence = fields.Char(string="No. entidad o dependencia",required=True)
+#    subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencias")
+#
+#    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
+#    @api.constrains('code')#def _check_code(self):
+#        for obj in self: #val = obj.code
+#            if val.isdigit():
+#                if len(val)==1:
+#                    obj.code = '00'+obj.code
+#                if len(val)==2:
+#                    obj.code = '0'+obj.code 
+#            else:
+#                raise ValidationError(_('Valor Invalido'))
+#        rec = self.env['res.branch'].search(
+#        [('code', '=', self.code),('id', '!=', self.id)])
+#        if rec:
 
 class  budget_subdependence(models.Model):#Modelo Subdependencia (SD)
     _name = 'budget.subdependence'
+    _description = 'Subdepencencia'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
-    branch_id = fields.Many2one('res.branch',string="Dependencia",required=True,)
+#    branch_id = fields.Many2one('res.branch',string="Dependencia",required=True,)
 
     #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
     @api.constrains('code')
@@ -107,6 +106,7 @@ class  budget_subdependence(models.Model):#Modelo Subdependencia (SD)
 
 class budget_item(models.Model):#Modelo para Partida de Gasto (PAR).
     _name = 'budget.item'
+    _description = 'Partida de Gasto'
 
     code = fields.Char(string="Partida",required=True,size=3)
     name = fields.Char(string="Nombre",required=True)
@@ -136,6 +136,7 @@ class budget_item(models.Model):#Modelo para Partida de Gasto (PAR).
 
 class budget_resource_origin(models.Model):#Modelo para Origen del Recurso(OR).
     _name = 'budget.resource.origin'
+    _description = 'Origen del Recurso'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
@@ -168,6 +169,7 @@ class budget_resource_origin(models.Model):#Modelo para Origen del Recurso(OR).
 
 class budget_institutional_activity(models.Model):# Modelo para Actividad Institucional(AI).
     _name = 'budget.institutional.activity'
+    _description = 'Actividad Institucional'
 
     code = fields.Char(string="Código",required=True,size=5)
     name = fields.Char(string="Nombre",required=True)
@@ -196,6 +198,7 @@ class budget_institutional_activity(models.Model):# Modelo para Actividad Instit
 
 class budget_program_conversion(models.Model):#modelo para Conversión de Programa Presupuestario(CONPP).
     _name = 'budget.program.conversion'
+    _description = 'Conversión de Programa Presupuestario'
 
     code = fields.Char(string="Código",required=True,size=4)
     name = fields.Char(string="Nombre",required=True)
@@ -217,6 +220,7 @@ class budget_program_conversion(models.Model):#modelo para Conversión de Progra
 
 class budget_item_conversion(models.Model):#modelo para Conversión con partida (CONPA).
     _name = 'budget.item.conversion'
+    _description = 'Conversión con Partida'
 
     code = fields.Char(string="Código (partida)",required=True,size=5)
     name = fields.Char(string="Nombre",required=True)
@@ -249,6 +253,7 @@ class budget_item_conversion(models.Model):#modelo para Conversión con partida 
 
 class budget_expense_type(models.Model):# modelo para Tipo de gasto (TG).
     _name = 'budget.expense.type'
+    _description = 'Tipo de Gasto'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
@@ -270,6 +275,7 @@ class budget_expense_type(models.Model):# modelo para Tipo de gasto (TG).
 
 class budget_geographic_location(models.Model):#modelo para Ubicación Geográfica (UG).
     _name = 'budget.geographic.location'
+    _description = 'Ubicación Geográfica'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
@@ -291,6 +297,7 @@ class budget_geographic_location(models.Model):#modelo para Ubicación Geográfi
 
 class budget_key_portfolio(models.Model):#modelo Clave cartera(CC).
     _name = 'budget.key.portfolio'
+    _description = 'Clave Cartera'
 
     code = fields.Char(string="Código",required=True,size=4)
     name = fields.Char(string="Nombre",required=True)
@@ -318,6 +325,7 @@ class budget_key_portfolio(models.Model):#modelo Clave cartera(CC).
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 class budget_project_type(models.Model):#modelo para el Tipo de proyecto(TP).
     _name = 'budget.project.type'
+    _description = 'Tipo de Proyecto'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
@@ -374,6 +382,7 @@ class project_project_Modificar(models.Model):# modelo para Proyectos (NP). haci
 
 class budget_stage(models.Model):#modelo para Etapa(E).
     _name = 'budget.stage'
+    _description = 'Etapa'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
@@ -395,6 +404,7 @@ class budget_stage(models.Model):#modelo para Etapa(E).
 
 class  budget_agreement_type(models.Model):#modelo para Tipo de convenio(TC).
     _name = 'budget.agreement.type'
+    _description = 'Tipo de Convenio'
 
     code = fields.Char(string="Código",required=True,size=2)
     name = fields.Char(string="Nombre",required=True)
@@ -417,11 +427,12 @@ class  budget_agreement_type(models.Model):#modelo para Tipo de convenio(TC).
 
 class agreement_agreement(models.Model):#modelo para Convenios(NC)
     _name = 'agreement.agreement'
+    _description = 'Convenios'
 
     code = fields.Char(string="Código",required=True,size=6)
     name = fields.Char(string="Nombre",required=True)
     agreement_type_id = fields.Many2one('budget.agreement.type',string="Tipo de convenio",required=True)
-    branch_id = fields.Many2one('res.branch',string="Dependencia",required=True)
+    #branch_id = fields.Many2one('res.branch',string="Dependencia",required=True)
     budget_subdependence_id = fields.Many2one('budget.subdependence',string="Subdepencencia",required=True)
 
     #funcion para autocomplementar y que solo sean esnteros y la duplicidad 
@@ -444,6 +455,7 @@ class agreement_agreement(models.Model):#modelo para Convenios(NC)
 
 class budget_cog_conac(models.Model):#modelo para Catálogo COG CONAC ()
     _name = 'budget.cog.conac'
+    _description = 'Catálogo COG CONAC'
 
     code = fields.Char(string="Código",required=True)
     name = fields.Char(string="Nombre",required=True)
@@ -465,12 +477,15 @@ class budget_cog_conac(models.Model):#modelo para Catálogo COG CONAC ()
 
 class budget_structure(models.Model):#modelo para Orden del código programático.
     _name = 'budget.structure'
+    _description = 'Orden Programatico'
 
     sequence = fields.Char(string="Secuencia",required=True)
     name = fields.Char(string="Nombre",required=True)
-    catalog_id = fields.Many2one('ir.model',string="catalog_id")
+    catalog_id = fields.Many2one('ir.model',string="Catálogo")
+    to_search_field = fields.Char(string="Campo a buscar")
     position_from  = fields.Integer(string='Posición inicial',required=True)
     position_to  = fields.Integer(string="Posición final",required=True)
+    code_part_pro = fields.Boolean(string="Parte del codigo programático")
 
     #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
     @api.constrains('sequence')
@@ -495,7 +510,7 @@ class budget_structure(models.Model):#modelo para Orden del código programátic
 class c_nuevos_asientos_contables(models.Model):#modelo para Asientos contables,el cual hace un inherit al modelo  account.move.lines agregando los siguientes campos
     _inherit ='account.move.line'
 
-    branch_id = fields.Many2one('branch',string="Dependencia")
+    branch_id = fields.Char(string="Dependencia")
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencia")
     program_id = fields.Many2one('budget.program',string="Programa")
     subprogram_id = fields.Many2one('budget.subprogram',string="Subprograma")
@@ -521,233 +536,112 @@ class campos_nuevos_crossovered_budget(models.Model):# modelo el cual hace un in
     imported_registration_numbers = fields.Integer(string="Número de registros importados",readonly=True)
     budget_of_project_dgpo = fields.Boolean(string="Presupuesto de DGPO")
     move_id = fields.Many2one('account.move',string="Asiento contable",readonly=True)
+    tabla_invalidos = fields.One2many('tabla.incorrectos','tab_inv')
+
+    prueba = fields.Char(string="codigo programático")
 
     #funcion para leer archivos txt 
     @api.onchange('filename')
     def onchange_archivo(self):
-        ext = str(self.filename.split('.')[1])
-        if ext != 'txt':
-            raise ValidationError('El archivo adjunto no es compatible para la importación')
-                
-
-
-    @api.one
+        self.tabla_invalidos = [(5, 0, 0)]
+        if self.filename:
+            ext = str(self.filename.split('.')[1])
+            if ext != 'txt':
+                raise ValidationError('El archivo adjunto no es compatible para la importación')
+        else:
+            self.record_numbers = 0 
+            self.imported_registration_numbers = 0                  
+    
     def leer_archivo(self):
+        self.tabla_invalidos = [(5, 0, 0)]
+        res = {'value':{'tabla_invalidos':[],}} 
         if self.file_import:
-            data = base64.decodestring(self.file_import)
-            fobj = tempfile.NamedTemporaryFile(delete=False)
-            fname = fobj.name
-            fobj.write(data)
-            fobj.close()
-            image = open(fname,"r")
-            contvalid = 0
-            aray = 0
-            araysubp = 0
-            araydep = 0
-            araysudep = 0
-            araypar = 0
-            arayact = 0
-            arayconv = 0
-            arayconpar = 0
-            araytipo = 0
-            arayubic = 0
-            ararcart = 0
-            araytipo_pro = 0
-            arayno_proye = 0
-            arayetapa = 0
-            araytip_conv = 0
-            arayt_conv = 0
-            
-            
-
-            modpro =self.env['ir.model'].search([('model','=','budget.program')])
-            prog =self.env['budget.structure'].search([('catalog_id','=',modpro.id)])
-
-            modsubp=self.env['ir.model'].search([('model','=','budget.subprogram')])
-            subprog =self.env['budget.structure'].search([('catalog_id','=',modsubp.id)])
-
-            moddep = self.env['ir.model'].search([('model','=','res.branch')])
-            dep = self.env['budget.structure'].search([('catalog_id','=',moddep.id)])
-
-            modesubp = self.env['ir.model'].search([('model','=','budget.subdependence')])
-            subdep = self.env['budget.structure'].search([('catalog_id','=',modesubp.id)])
-
-            modpar = self.env['ir.model'].search([('model','=','budget.item')])
-            part = self.env['budget.structure'].search([('catalog_id','=',modpar.id)])
-
-            modact = self.env['ir.model'].search([('model','=','budget.institutional.activity')])
-            acti = self.env['budget.structure'].search([('catalog_id','=',modact.id)])
-
-            modconv = self.env['ir.model'].search([('model','=','budget.program.conversion')])
-            conv = self.env['budget.structure'].search([('catalog_id','=',modconv.id)])
-
-            modconpart = self.env['ir.model'].search([('model','=','budget.item.conversion')])
-            convpar = self.env['budget.structure'].search([('catalog_id','=',modconpart.id)])
-
-            modtipo = self.env['ir.model'].search([('model','=','budget.expense.type')])
-            tipgt =  self.env['budget.structure'].search([('catalog_id','=',modtipo.id)])
-
-            modubica =  self.env['ir.model'].search([('model','=','budget.geographic.location')])
-            ubica_g = self.env['budget.structure'].search([('catalog_id','=',modubica.id)])
-
-            modcart =  self.env['ir.model'].search([('model','=','budget.key.portfolio')])
-            cart =  self.env['budget.structure'].search([('catalog_id','=',modcart.id)])
-
-            modtipo_pro =  self.env['ir.model'].search([('model','=','budget.project.type')])
-            tipo_pro = self.env['budget.structure'].search([('catalog_id','=',modtipo_pro.id)]) 
-
-            modno_proy = self.env['ir.model'].search([('model','=','project.project')])
-            no_proy = self.env['budget.structure'].search([('catalog_id','=',modno_proy.id)])
-
-            modetapa = self.env['ir.model'].search([('model','=','budget.stage')])
-            etapa = self.env['budget.structure'].search([('catalog_id','=',modetapa.id)])
-
-            mod_tip_conv = self.env['ir.model'].search([('model','=','budget.agreement.type')])
-            tip_convenio  = self.env['budget.structure'].search([('catalog_id','=',mod_tip_conv.id)])
-
-            modet_conv = self.env['ir.model'].search([('model','=','agreement.agreement')])
-            t_conv =  self.env['budget.structure'].search([('catalog_id','=',modet_conv.id)])
+            if self.file_import:
+                data = base64.decodestring(self.file_import)
+                fobj = tempfile.NamedTemporaryFile(delete=False)
+                fname = fobj.name
+                fobj.write(data)
+                fobj.close()
+                image = open(fname,"r")
+                contvalid = 0            
 
 
-            if prog:
-                inicial = prog.position_from
-                final = prog.position_to
-            if subprog:
-                inisub = subprog.position_from
-                finsub = subprog.position_to
-            if dep:
-                indep = dep.position_from
-                fidep = dep.position_to
-            if subdep:
-                insubdep =subdep.position_from
-                fisubdep = subdep.position_to
-            if part:
-                inipar = part.position_from
-                finpar = part.position_to
-            if acti:
-                iniact = acti.position_from
-                finact = acti.position_to
-            if conv:
-                iniconv = conv.position_from
-                finconv = conv.position_to 
-            if convpar:
-                inicop = convpar.position_from
-                fincop = convpar.position_to  
-            if tipgt:
-                initipo = tipgt.position_from
-                fintipo = tipgt.position_to 
-            if  ubica_g:
-                iniubi = ubica_g.position_from
-                finubi = ubica_g.position_to
-            if cart:
-                inicart = cart.position_from
-                fincart = cart.position_to
-            if tipo_pro:
-                inipro = tipo_pro.position_from
-                finapro = tipo_pro.position_to 
-            if no_proy:
-                inicialnop = no_proy.position_from
-                finalnop = no_proy.position_to 
-            if etapa:
-                inicialet = etapa.position_from
-                finalet = etapa.position_to
-            if tip_convenio:
-                init_c = tip_convenio.position_from
-                fin_c = tip_convenio.position_to
-                
-            if t_conv:
-                intcov = t_conv.position_from
-                fincov = t_conv.position_to
+                a = []
+                datos = {}
 
 
-            b_programa = self.env['budget.program']
-            b_subpro = self.env['budget.subprogram']
-            b_depen =self.env['res.branch']
-            b_sebdep = self.env['budget.subdependence']
-            b_part = self.env['budget.item']
-            b_act = self.env['budget.institutional.activity']
-            b_conv = self.env['budget.program.conversion']
-            b_convpar = self.env['budget.item.conversion']
-            b_tipo = self.env['budget.expense.type']
-            b_ubic = self.env['budget.geographic.location']
-            b_cart = self.env['budget.key.portfolio']
-            b_tip_pro = self.env['budget.project.type']
-            b_no_proy = self.env['project.project']
-            b_etapa = self.env['budget.stage']
-            b_t_convenio = self.env['budget.agreement.type']
-            b_tipo_conv = self.env['agreement.agreement']
-            tot_reg = 0
-            for x in image:
-                aray =x[inicial:final]
-                araysubp = x[inisub:finsub]
-                araydep = x[indep:fidep]
-                araysudep =x[insubdep:fisubdep]
-                araypar = x[inipar:finpar]
-                arayact = x[iniact:finact]
-                arayconv = x[iniconv:finconv]
-                arayconpar = x[inicop:fincop]
-                araytipo = x[initipo:fintipo]
-                arayubic = x[iniubi:finubi]
-                ararcart = x[inicart:fincart]
-                araytipo_pro = x[inipro:finapro]
-                arayno_proye = x[inicialnop:finalnop]
-                arayetapa = x[inicialet:finalet]
-                araytip_conv =x[init_c:fin_c]
-                arayt_conv = x[intcov:fincov]
-                if aray:
-                    con = b_programa.search_count([('code','=',str(aray))])
-                    if con:
-                        if araysubp:
-                            subp = b_subpro.search_count([('code','=',str(araysubp))])
-                            if subp:
-                                if araydep:
-                                    depn = b_depen.search_count([('code','=',str(araydep))])
-                                    if depn:
-                                        if araysudep:
-                                            depen  = b_sebdep.search_count([('code','=',str(araysudep))])                         
-                                            if depen:
-                                                if araypar:
-                                                    partida = b_part.search_count([('code','=',str(araypar))])
-                                                    if partida:
-                                                        if arayact:
-                                                            activ= b_act.search_count([('code','=',str(arayact))])
-                                                            if activ:
-                                                                if arayconv:
-                                                                    convp = b_conv.search_count([('code','=',str(arayconv))])
-                                                                    if convp:
-                                                                        if arayconpar:
-                                                                            parconv = b_convpar.search_count([('code','=',str(arayconpar))])
-                                                                            if parconv:
-                                                                                if araytipo:
-                                                                                    tipo_gasto = b_tipo.search_count([('code','=',str(araytipo))])
-                                                                                    if tipo_gasto:
-                                                                                        if arayubic:
-                                                                                            ubi_g = b_ubic.search_count([('code','=',str(arayubic))])
-                                                                                            if ubi_g:
-                                                                                                if ararcart:
-                                                                                                    b_carte = b_cart.search_count([('code','=',str(ararcart))])
-                                                                                                    if b_carte:
-                                                                                                        if araytipo_pro:
-                                                                                                            tipo_proye = b_tip_pro.search_count([('code','=',str(araytipo_pro))])
-                                                                                                            if tipo_proye:
-                                                                                                                if arayno_proye:
-                                                                                                                    no_proyecto = b_no_proy.search_count([('code','=',str(arayno_proye))])
-                                                                                                                    if no_proyecto:
-                                                                                                                        if arayetapa:
-                                                                                                                            etapa_e = b_etapa.search_count([('code','=',str(arayetapa))])
-                                                                                                                            if etapa_e:
-                                                                                                                                if araytip_conv:
-                                                                                                                                    tipo_convenio =b_t_convenio.search_count([('code','=',str(araytip_conv))])
-                                                                                                                                    if tipo_convenio:
-                                                                                                                                        if arayt_conv:
-                                                                                                                                            tip_conv = b_tipo_conv.search_count([('code','=',str(arayt_conv))])
-                                                                                                                                            if tip_conv:
-                                                                                                                                                contvalid += 1  
-                tot_reg += 1                
-            self.record_numbers = tot_reg
-            self.imported_registration_numbers = contvalid
+                general = self.env['budget.structure'].search([('code_part_pro','=',True)])
+                tot_reg = 0
+                mensaje = "ERRORES: "
+                valido = True
+                name_code = ''
+                for tx in image:
+                    for x in general:
+                        aray = tx[x.position_from:x.position_to]
+                        if x.catalog_id.model:
+                            b_programa = self.env[str(x.catalog_id.model)].search([(x.to_search_field,'=',str(aray))])
+                            if not b_programa:
+                                valido = False
+                                mensaje = mensaje + ' codigo invalido en el modelo  '+ x.catalog_id.name
+                        if x.catalog_id.model =='budget.item':
+                            gasto = self.env['budget.item'].search([('code','=',str(aray))])
+                            print(gasto.expense_account.name)
+                        name_code = name_code + ' '+x.name                              
+                    if valido == True:
+                        contvalid +=1
 
-                            
+
+                        datos = {'name':tx,'code':gasto.expense_account.code,'name_account':gasto.expense_account.name,'user_type':gasto.expense_account.user_type_id.id,'compa':gasto.expense_account.company_id.id}
+                        a.append(datos)
+
+
+
+                    if valido == False:
+                        self.tabla_invalidos.create({
+                                'code':tx,
+                                'description':mensaje, 
+                                'tab_inv': self.id,
+                            })               
+                    tot_reg +=1
+
+                self.record_numbers = tot_reg
+                self.imported_registration_numbers = contvalid
+                self.prueba = name_code
+
+                con = 0
+                for w in a:
+                    con += 1
+                if self.record_numbers == con:
+                    raise ValidationError('Se registro al menos un error a la hora de importart el archivo .txt')
+                else:
+                    modelo = self.env['account.budget.post']
+                    cod = 0
+                    for linea in a:
+                        cod += 1
+                        modelo_values = {
+                            'name': linea['name'],
+                            'account_ids':[(0,0, {'code':linea['code'],'name':linea['name_account'],'user_type_id':linea['user_type']})]
+                        }
+                        modelo_id = modelo.create(modelo_values)
+                    
+
+
+
+            else:
+                self.record_numbers = 0
+                self.imported_registration_numbers = 0
+                self.prueba = False
+        else:
+            raise ValidationError('Importe Archivo')      
+
+   
+
+class tabla_invalidos_txt(models.Model):#tabla para crear los registros del txt incorrectos
+    _name = 'tabla.incorrectos'
+
+    tab_inv = fields.Many2one('crossovered.budget',ondelete="cascade")
+    code = fields.Char(string='Codido programático')
+    description = fields.Char(string="Descripción")
 
 
 class campos_adiccionales_presupuesto(models.Model):# modelo en el cual se hace un inherit al modedlo existente crossovered.budget.lines pag del doc 24
@@ -820,7 +714,7 @@ class budget_amount_allocated_lines(models.Model): #parte del modelo budget.amou
     programmatic_code = fields.Char(string="Código programático",required=True)
     amount = fields.Float(string="Monto",required=True)
     date  = fields.Date(string="Fecha",required=True)
-    branch_id = fields.Many2one('res.branch',string="Dependencia")
+    #branch_id = fields.Many2one('res.branch',string="Dependencia")
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencia")
     program_id = fields.Many2one('budget.program',string="Programa")
     subprogram_id = fields.Many2one('budget.subprogram',string="Subprograma")
@@ -858,7 +752,7 @@ class tabla_budget_adjustement_line(models.Model):#modelo el cual se muestra en 
     programmatic_code = fields.Char(string="Código programático",required=True)
     type = fields.Selection([('a','Aumento'),('d','Disminución')],string="Tipo",required=True)
     amount = fields.Float(string="Importe",required=True)
-    branch_id = fields.Many2one('res.branch',string="Dependencia",required=True)
+    #branch_id = fields.Many2one('res.branch',string="Dependencia",required=True)
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdepencencia",required=True)
     program_id = fields.Many2one('budget.program',string="Programa",required=True)
     subprogram_id = fields.Many2one('budget.subprogram',string="Subprograma",required=True)
@@ -894,7 +788,7 @@ class budget_rescheduling(models.Model):# modelo para Control de recalendarizaci
     to_period = fields.Selection([('t1','Trimestre 1'),('t2','Trimestre 2'),('t3','Trimestre 3'),('t4','Trimestre 4')],string="Enviar a",required=True)
     reason_for_rejection = fields.Char(string="Motivo del rechazo")
     import_recalendarization_id = fields.Many2one('budget.import.recalendarization',string="Recalendarización",required=True)
-    branch_id =fields.Many2one('res.branch',string="Dependencia",required=True)
+    #branch_id =fields.Many2one('res.branch',string="Dependencia",required=True)
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencia",required=True)
     program_id = fields.Many2one('budget.program',string="Programa",required=True)
     subprogram_id = fields.Many2one('budget.subprogram',string="Subprograma",required=True)
@@ -909,10 +803,10 @@ class budget_rescheduling(models.Model):# modelo para Control de recalendarizaci
     move_id = fields.Many2one('account.move',string="Asiento contable")
 
 class inherit_campos_nuevos_account(models.Model):#campos adicionales a este modelo Validación del presupuesto, solicitudes de pago.
-    _inherit = 'account.invoice.line'
+    _inherit = 'account.move.line'
 
     programmatic_code = fields.Char(string="Código programático",required=True)
-    branch_id = fields.Many2one('res.branch',string="Dependencia")
+    #branch_id = fields.Many2one('res.branch',string="Dependencia")
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdepencencia")
     program_id = fields.Many2one('budget.program',string="Programa")
     subprogram_id = fields.Many2one('budget.subprogram',string="SubPrograma")
@@ -932,7 +826,7 @@ class inherit_campos_nuevos_account(models.Model):#campos adicionales a este mod
     agreement_number = fields.Many2one('agreement.agreement',string="Número de convenio")
 
 class caampos_accon_inhe(models.Model):
-    _inherit  = 'account.invoice'
+    _inherit  = 'account.move'
 
     
     sub_state = fields.Selection([('so','Solicitud'),('ap','Aprovado'),('app','Aprovado para pago'),('ma','Medio de pago asignado'),('pa','Pagado'),('re','Rechazado'),('ca','Cancelado'),('pna','Pago no aplicado'),('mpc','Medio de pago cancelado'),('rpp','Rechazado por pago')],string="Sub-Estado",required=True)
