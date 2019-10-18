@@ -770,7 +770,7 @@
             <notebook>
               <page string="Control de depósitos ">
                 <sheet>
-                  <field name="tabla_control">
+                  <field name="deposit_control">
                     <tree string="Tabla control" editable="bottom">
                       <field name="assigment_amount"/>
                       <field name="deposit_date"/>
@@ -778,7 +778,8 @@
                       <field name="deposit_account_bank_id"/>
                       <field name="pending_amount"/>
                       <field name="Comments"/>
-                      <field name="move_id"/>                      
+                      <field name="move_id"/>
+                      <field name="budget_amount_allocated_id" invisible="1" />                      
                     </tree>                    
                   </field>                                 
                 </sheet>
@@ -904,7 +905,7 @@
             <notebook>
               <page string="líneas de adecuación">
                 <sheet>
-                  <field name="tabla_ade">
+                  <field name="budget_adjustement_line">
                     <tree string="Adecuacion" editable="bottom">
                       <field name="programmatic_code"/>
                       <field name="adjustement_id"/>
@@ -1157,11 +1158,11 @@
       <xpath expr="//field[@name='partner_id']" position="after">                 
         <field name="sub_type"/>
         <field name="type_project_id"/>
-        <field name="date_start1"/>  
+        <field name="date_start"/>  
       </xpath>
       
       <xpath expr="//field[@name='company_id']" position="after">        
-        <field name="date1"/>
+        <field name="date"/>
         <field name="amount_allocated"/>
         <field name="consumed_amount"/> 
       </xpath>
@@ -1209,7 +1210,7 @@
     <field name="inherit_id" ref="account_budget.crossovered_budget_view_form"/>
     <field name="arch" type="xml">
       <xpath expr="//button[@name='action_budget_confirm']" position="after">
-        <button name="leer_archivo"   string="Importar presupuesto" type="object" class="oe_highlight" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>  
+        <button name="read_file"   string="Importar presupuesto" type="object" class="oe_highlight" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>  
       </xpath>
 
      <!--despues del page-->
@@ -1223,15 +1224,16 @@
         <field name="record_numbers" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>             
         <field name="imported_registration_numbers" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>
         <field name="move_id" attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}"/>
-        <field name="prueba"/>
+        <field name="programatic_code"/>
       </xpath>
       <xpath expr="//page" position="after">
         <page string="líneas incorrectas txt"  attrs="{'invisible':[('budget_of_project_dgpo' ,'=' ,False)]}">
           <sheet>
-            <field name="tabla_invalidos">
+            <field name="invalid_rows">
               <tree string="Incorrectos" editable="bottom">
                 <field name="code"/>
                 <field name="description"/>
+                <field name="crossovered_budget_id" invisible="1"/>
                </tree> 
             </field>  
           </sheet>

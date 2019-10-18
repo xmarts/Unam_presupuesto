@@ -11,13 +11,13 @@ import xlrd
 from random import randint
 
 
-class budget_program(models.Model): #modleo para el programa
+class BudgetProgram(models.Model): #modleo para el programa
     _name = 'budget.program'
     _description = 'Programa'
 
-    code =  fields.Char(string='Código',required=True,size=2)
-    name = fields.Char(string="Nombre",required=True)
-    budget_subprogam_id = fields.Many2one('budget.subprogram',string="Subprograma")
+    code = fields.Char(string='Código', required=True, size=2)
+    name = fields.Char(string="Nombre", required=True)
+    budget_subprogam_id = fields.Many2one('budget.subprogram', string="Subprograma")
 
     #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
     @api.constrains('code')
@@ -34,12 +34,12 @@ class budget_program(models.Model): #modleo para el programa
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
-class budget_subprogram(models.Model):#se crea este modelo  SubPrograma (SP) con los siguientes campos 
+class BudgertSubprogram(models.Model):#se crea este modelo  SubPrograma (SP) con los siguientes campos 
     _name = 'budget.subprogram'
     _description = 'SubPrograma'
 
-    code =  fields.Char(string="Código",required=True,size=2)
-    name = fields.Char(string="Nombre",required=True)
+    code = fields.Char(string="Código", required=True, size=2)
+    name = fields.Char(string="Nombre", required=True)
 
     #branch_id = fields.Many2one('res.branch',string="Dependencia",required=True,)
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencia",required=True)
@@ -59,7 +59,7 @@ class budget_subprogram(models.Model):#se crea este modelo  SubPrograma (SP) con
         [('code', '=', self.code),('id', '!=', self.id)])
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
-
+###   VERIFICAR SI ES NECESARIO O NO CREAR MODELO BUDGET.DEPENDENCE    ###
 #class campos_nuevos_branch(models.Model):#Este es un inherit al modelo del branch ,Dependencia (DEP).
 #    _inherit = 'res.branch'
 #    code = fields.Char(string="Código",required=True,size=3)
@@ -81,7 +81,7 @@ class budget_subprogram(models.Model):#se crea este modelo  SubPrograma (SP) con
 #        [('code', '=', self.code),('id', '!=', self.id)])
 #        if rec:
 
-class  budget_subdependence(models.Model):#Modelo Subdependencia (SD)
+class  BudgetSubdependence(models.Model):#Modelo Subdependencia (SD)
     _name = 'budget.subdependence'
     _description = 'Subdepencencia'
 
@@ -104,7 +104,7 @@ class  budget_subdependence(models.Model):#Modelo Subdependencia (SD)
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único por dependencia'))
 
-class budget_item(models.Model):#Modelo para Partida de Gasto (PAR).
+class BudgetItem(models.Model):#Modelo para Partida de Gasto (PAR).
     _name = 'budget.item'
     _description = 'Partida de Gasto'
 
@@ -134,7 +134,7 @@ class budget_item(models.Model):#Modelo para Partida de Gasto (PAR).
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
-class budget_resource_origin(models.Model):#Modelo para Origen del Recurso(OR).
+class BudgetResource_origin(models.Model):#Modelo para Origen del Recurso(OR).
     _name = 'budget.resource.origin'
     _description = 'Origen del Recurso'
 
@@ -167,7 +167,7 @@ class budget_resource_origin(models.Model):#Modelo para Origen del Recurso(OR).
         elif self.is_income_owne ==False: 
             self.is_income_owne2 == True    
 
-class budget_institutional_activity(models.Model):# Modelo para Actividad Institucional(AI).
+class BudgetInstitutionalActivity(models.Model):# Modelo para Actividad Institucional(AI).
     _name = 'budget.institutional.activity'
     _description = 'Actividad Institucional'
 
@@ -196,7 +196,7 @@ class budget_institutional_activity(models.Model):# Modelo para Actividad Instit
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
 
-class budget_program_conversion(models.Model):#modelo para Conversión de Programa Presupuestario(CONPP).
+class BudgetProgramConversion(models.Model):#modelo para Conversión de Programa Presupuestario(CONPP).
     _name = 'budget.program.conversion'
     _description = 'Conversión de Programa Presupuestario'
 
@@ -218,7 +218,7 @@ class budget_program_conversion(models.Model):#modelo para Conversión de Progra
 
 
 
-class budget_item_conversion(models.Model):#modelo para Conversión con partida (CONPA).
+class BudgetItemConversion(models.Model):#modelo para Conversión con partida (CONPA).
     _name = 'budget.item.conversion'
     _description = 'Conversión con Partida'
 
@@ -251,7 +251,7 @@ class budget_item_conversion(models.Model):#modelo para Conversión con partida 
             raise ValidationError(_('Valor duplicado, el código debe ser único por partida.'))
 
 
-class budget_expense_type(models.Model):# modelo para Tipo de gasto (TG).
+class BudgetExpenseType(models.Model):# modelo para Tipo de gasto (TG).
     _name = 'budget.expense.type'
     _description = 'Tipo de Gasto'
 
@@ -273,7 +273,7 @@ class budget_expense_type(models.Model):# modelo para Tipo de gasto (TG).
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
-class budget_geographic_location(models.Model):#modelo para Ubicación Geográfica (UG).
+class BudgetGeographicLocation(models.Model):#modelo para Ubicación Geográfica (UG).
     _name = 'budget.geographic.location'
     _description = 'Ubicación Geográfica'
 
@@ -295,7 +295,7 @@ class budget_geographic_location(models.Model):#modelo para Ubicación Geográfi
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
-class budget_key_portfolio(models.Model):#modelo Clave cartera(CC).
+class BudgetKeyPortfolio(models.Model):#modelo Clave cartera(CC).
     _name = 'budget.key.portfolio'
     _description = 'Clave Cartera'
 
@@ -323,7 +323,7 @@ class budget_key_portfolio(models.Model):#modelo Clave cartera(CC).
         [('code', '=', self.code),('id', '!=', self.id)])
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
-class budget_project_type(models.Model):#modelo para el Tipo de proyecto(TP).
+class BudgetProjectType(models.Model):#modelo para el Tipo de proyecto(TP).
     _name = 'budget.project.type'
     _description = 'Tipo de Proyecto'
 
@@ -347,7 +347,7 @@ class budget_project_type(models.Model):#modelo para el Tipo de proyecto(TP).
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
 
-class project_project_Modificar(models.Model):# modelo para Proyectos (NP). haciendo inherit al modelo project.project
+class ProjectProjectMod(models.Model):# modelo para Proyectos (NP). haciendo inherit al modelo project.project
     _inherit = 'project.project'
 
 
@@ -356,8 +356,8 @@ class project_project_Modificar(models.Model):# modelo para Proyectos (NP). haci
     sub_type = fields.Selection([('spp','(SPP) Sistema de pagos a proveedores de bienes y prestadores de servicio.'),('cbc','(CBC) Cuenta bancaria con chequera.')],string="Subtipo de proyecto",required=True)
     amount_allocated = fields.Monetary(string="Monto asignado",required=True)
     consumed_amount = fields.Monetary(string="Monto ejercido",required=True)
-    date_start1 = fields.Date(string='Fecha de inicio del proyecto',required=True)
-    date1 = fields.Date(string='Fecha final del proyecto',required=True)
+    # date_start1 = fields.Date(string='Fecha de inicio del proyecto',required=True)
+    # date1 = fields.Date(string='Fecha final del proyecto',required=True)
 
     #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
     @api.constrains('code')
@@ -380,7 +380,7 @@ class project_project_Modificar(models.Model):# modelo para Proyectos (NP). haci
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
-class budget_stage(models.Model):#modelo para Etapa(E).
+class BudgetStage(models.Model):#modelo para Etapa(E).
     _name = 'budget.stage'
     _description = 'Etapa'
 
@@ -402,7 +402,7 @@ class budget_stage(models.Model):#modelo para Etapa(E).
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
-class  budget_agreement_type(models.Model):#modelo para Tipo de convenio(TC).
+class BudgetAgreementType(models.Model):#modelo para Tipo de convenio(TC).
     _name = 'budget.agreement.type'
     _description = 'Tipo de Convenio'
 
@@ -425,7 +425,7 @@ class  budget_agreement_type(models.Model):#modelo para Tipo de convenio(TC).
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
 
-class agreement_agreement(models.Model):#modelo para Convenios(NC)
+class AgreementAgreement(models.Model):#modelo para Convenios(NC)
     _name = 'agreement.agreement'
     _description = 'Convenios'
 
@@ -453,7 +453,7 @@ class agreement_agreement(models.Model):#modelo para Convenios(NC)
 
 
 
-class budget_cog_conac(models.Model):#modelo para Catálogo COG CONAC ()
+class BudgetCogConac(models.Model):#modelo para Catálogo COG CONAC ()
     _name = 'budget.cog.conac'
     _description = 'Catálogo COG CONAC'
 
@@ -475,17 +475,17 @@ class budget_cog_conac(models.Model):#modelo para Catálogo COG CONAC ()
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
-class budget_structure(models.Model):#modelo para Orden del código programático.
+class BudgetStructure(models.Model):#modelo para Orden del código programático.
     _name = 'budget.structure'
     _description = 'Orden Programatico'
 
     sequence = fields.Char(string="Secuencia",required=True)
     name = fields.Char(string="Nombre",required=True)
     catalog_id = fields.Many2one('ir.model',string="Catálogo")
-    to_search_field = fields.Char(string="Campo a buscar")
+    to_search_field = fields.Char(string="Campo a buscar", help="Colocar nombre tecnico del campo a comparar en el modelo, por ejemplo 'code'")
     position_from  = fields.Integer(string='Posición inicial',required=True)
     position_to  = fields.Integer(string="Posición final",required=True)
-    code_part_pro = fields.Boolean(string="Parte del codigo programático")
+    code_part_pro = fields.Boolean(string="Forma parte del codigo programático")
 
     #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
     @api.constrains('sequence')
@@ -498,7 +498,7 @@ class budget_structure(models.Model):#modelo para Orden del código programátic
             if val.isdigit():
                 busca = self.env['budget.structure'].search(
                     [('catalog_id','=',self.catalog_id.id),('sequence', '!=', self.sequence)],limit=1)
-                if busca:
+                if busca and self.catalog_id:
                     raise ValidationError(_('Catálogo duplicado, solo puede haber un registro por catálogo '))   
 
         rec = self.env['budget.structure'].search(
@@ -507,7 +507,7 @@ class budget_structure(models.Model):#modelo para Orden del código programátic
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
  
 
-class c_nuevos_asientos_contables(models.Model):#modelo para Asientos contables,el cual hace un inherit al modelo  account.move.lines agregando los siguientes campos
+class InheritAccountMoveLine(models.Model):#modelo para Asientos contables,el cual hace un inherit al modelo  account.move.lines agregando los siguientes campos
     _inherit ='account.move.line'
 
     branch_id = fields.Char(string="Dependencia")
@@ -526,7 +526,7 @@ class c_nuevos_asientos_contables(models.Model):#modelo para Asientos contables,
     project_number_id = fields.Many2one('project.project',string="Número de proyecto")
 
 
-class campos_nuevos_crossovered_budget(models.Model):# modelo el cual hace un inherit al modelo crossovered.budget
+class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al modelo crossovered.budget
     _inherit = 'crossovered.budget'
 
     file_import  = fields.Binary(string='Archivo de importación')
@@ -536,14 +536,13 @@ class campos_nuevos_crossovered_budget(models.Model):# modelo el cual hace un in
     imported_registration_numbers = fields.Integer(string="Número de registros importados",readonly=True)
     budget_of_project_dgpo = fields.Boolean(string="Presupuesto de DGPO")
     move_id = fields.Many2one('account.move',string="Asiento contable",readonly=True)
-    tabla_invalidos = fields.One2many('tabla.incorrectos','tab_inv')
-
-    prueba = fields.Char(string="codigo programático")
+    invalid_rows = fields.One2many('invalid.row','crossovered_budget_id')
+    programatic_code = fields.Char(string="codigo programático")
 
     #funcion para leer archivos txt 
     @api.onchange('filename')
     def onchange_archivo(self):
-        self.tabla_invalidos = [(5, 0, 0)]
+        self.invalid_rows = [(5, 0, 0)]
         if self.filename:
             ext = str(self.filename.split('.')[1])
             if ext != 'txt':
@@ -552,9 +551,53 @@ class campos_nuevos_crossovered_budget(models.Model):# modelo el cual hace un in
             self.record_numbers = 0 
             self.imported_registration_numbers = 0                  
     
+    def read_file(self):
+        self.invalid_rows = [(5, 0, 0)]
+        if self.file_import:
+            data = base64.decodestring(self.file_import)
+            fobj = tempfile.NamedTemporaryFile(delete=False)
+            fname = fobj.name
+            fobj.write(data)
+            fobj.close()
+            file = open(fname,"r")
+            structure = self.env['budget.structure'].search([('code_part_pro','=',True)])
+            count_valid = 0
+            tot_reg = 0
+            message = " ERRORES: "
+            valid = True
+            data_code = ''
+            number_line = 0
+            for x in file:
+                number_line += 1
+                for y in structure:
+                    position = x[y.position_from:y.position_to]
+                    if y.catalog_id.model:
+                        search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                        if not search_model:
+                            valid = False
+                            message += ' Código invalido en el modelo '+ y.catalog_id.name + '. \n'
+                    data_code += '\n'+y.name+', '  
+                if valid == True:
+                    count_valid += 1
+                else:
+                    self.invalid_rows.create({
+                        'code':x,
+                        'description':'Linea '+ str(number_line) +message, 
+                        'crossovered_budget_id': self.id,
+                    })
+                tot_reg += 1
+                self.record_numbers = tot_reg
+                self.imported_registration_numbers = count_valid
+                self.programatic_code = data_code
+        else:
+            self.record_numbers = 0
+            self.imported_registration_numbers = 0
+            self.programatic_code = False
+
+
+
     def leer_archivo(self):
-        self.tabla_invalidos = [(5, 0, 0)]
-        res = {'value':{'tabla_invalidos':[],}} 
+        self.invalid_rows = [(5, 0, 0)]
         if self.file_import:
             if self.file_import:
                 data = base64.decodestring(self.file_import)
@@ -563,34 +606,31 @@ class campos_nuevos_crossovered_budget(models.Model):# modelo el cual hace un in
                 fobj.write(data)
                 fobj.close()
                 image = open(fname,"r")
-                contvalid = 0            
-
-
+                count_valid = 0            
                 a = []
                 datos = {}
-
-
                 general = self.env['budget.structure'].search([('code_part_pro','=',True)])
+                print("GENERALES: ", general.ids)
                 tot_reg = 0
                 mensaje = "ERRORES: "
                 valido = True
                 name_code = ''
+                gasto = False
                 for tx in image:
                     for x in general:
                         aray = tx[x.position_from:x.position_to]
+                        print(x.catalog_id.model)
                         if x.catalog_id.model:
                             b_programa = self.env[str(x.catalog_id.model)].search([(x.to_search_field,'=',str(aray))])
                             if not b_programa:
                                 valido = False
                                 mensaje = mensaje + ' codigo invalido en el modelo  '+ x.catalog_id.name
                         if x.catalog_id.model =='budget.item':
-                            gasto = self.env['budget.item'].search([('code','=',str(aray))])
+                            gasto = self.env['budget.item'].search([(x.to_search_field,'=',str(aray))])
                             print(gasto.expense_account.name)
                         name_code = name_code + ' '+x.name                              
                     if valido == True:
-                        contvalid +=1
-
-
+                        count_valid +=1
                         datos = {'name':tx,'code':gasto.expense_account.code,'name_account':gasto.expense_account.name,'user_type':gasto.expense_account.user_type_id.id,'compa':gasto.expense_account.company_id.id}
                         a.append(datos)
 
@@ -605,24 +645,24 @@ class campos_nuevos_crossovered_budget(models.Model):# modelo el cual hace un in
                     tot_reg +=1
 
                 self.record_numbers = tot_reg
-                self.imported_registration_numbers = contvalid
-                self.prueba = name_code
+                self.imported_registration_numbers = count_valid
+                self.programatic_code = name_code
 
-                con = 0
-                for w in a:
-                    con += 1
-                if self.record_numbers == con:
-                    raise ValidationError('Se registro al menos un error a la hora de importart el archivo .txt')
-                else:
-                    modelo = self.env['account.budget.post']
-                    cod = 0
-                    for linea in a:
-                        cod += 1
-                        modelo_values = {
-                            'name': linea['name'],
-                            'account_ids':[(0,0, {'code':linea['code'],'name':linea['name_account'],'user_type_id':linea['user_type']})]
-                        }
-                        modelo_id = modelo.create(modelo_values)
+                # con = 0
+                # for w in a:
+                #     con += 1
+                # if self.record_numbers == con:
+                #     raise ValidationError('Se registro al menos un error a la hora de importart el archivo .txt')
+                # else:
+                #     modelo = self.env['account.budget.post']
+                #     cod = 0
+                #     for linea in a:
+                #         cod += 1
+                #         modelo_values = {
+                #             'name': linea['name'],
+                #             'account_ids':[(0,0, {'code':linea['code'],'name':linea['name_account'],'user_type_id':linea['user_type']})]
+                #         }
+                #         modelo_id = modelo.create(modelo_values)
                     
 
 
@@ -630,21 +670,21 @@ class campos_nuevos_crossovered_budget(models.Model):# modelo el cual hace un in
             else:
                 self.record_numbers = 0
                 self.imported_registration_numbers = 0
-                self.prueba = False
+                self.programatic_code = False
         else:
             raise ValidationError('Importe Archivo')      
 
    
 
-class tabla_invalidos_txt(models.Model):#tabla para crear los registros del txt incorrectos
-    _name = 'tabla.incorrectos'
+class InvalidDataTXT(models.Model):#tabla para crear los registros del txt incorrectos
+    _name = 'invalid.row'
 
-    tab_inv = fields.Many2one('crossovered.budget',ondelete="cascade")
+    crossovered_budget_id = fields.Many2one('crossovered.budget',ondelete="cascade")
     code = fields.Char(string='Codido programático')
     description = fields.Char(string="Descripción")
 
 
-class campos_adiccionales_presupuesto(models.Model):# modelo en el cual se hace un inherit al modedlo existente crossovered.budget.lines pag del doc 24
+class InheritCrossoveredBudgetLine(models.Model):# modelo en el cual se hace un inherit al modedlo existente crossovered.budget.lines pag del doc 24
     _inherit = 'crossovered.budget.lines'
     #campos replazables que utilice para ocultarlos
     paid_date = fields.Date('Paid Date')
@@ -679,24 +719,22 @@ class campos_adiccionales_presupuesto(models.Model):# modelo en el cual se hace 
     geographic_location_id = fields.Many2one('budget.geographic.location',string="Ubicación geográfica")
     key_portfolio_id = fields.Many2one('budget.key.portfolio',string="Clave cartera")
 
-class budget_amount_allocated(models.Model):# modelo para Control de montos asignados pag 24 doc
+class BudgetAmountAllocated(models.Model):# modelo para Control de montos asignados pag 24 doc
     _name = 'budget.amount.allocated'
-    state = fields.Selection([('draft', 'Borrador'),('approve','Aprovado'),('solicitud','Solicitud'),('reject','Rechazado'),('cancel','Cancelado')], default="draft")
     code = fields.Char(string="Folio",required=True)
     budget_id = fields.Many2one('crossovered.budget',string="Presupuesto",required=True)
     description = fields.Char(string="Observaciones")
     date_import = fields.Date(string="Fecha de importación",required=True)
     file_amount_allocated  = fields.Binary(string="Archivo estacionalidad",required=True)
     user_id = fields.Many2one('res.users',string="Realizado por",required=True)
+    state = fields.Selection([('draft', 'Borrador'),('approve','Aprovado'),('solicitud','Solicitud'),('reject','Rechazado'),('cancel','Cancelado')], default="draft")
     reason_for_rejection = fields.Char(string="Motivo del rechazo")
+    deposit_control = fields.One2many('deposit.control.table', 'budget_amount_allocated_id')
 
-    tabla_control = fields.One2many('tabla.control.depositos', 'relacion')
+class DepositControlTable(models.Model):#tabla control de montos 
+    _name = 'deposit.control.table'
 
-
-class tabla_control_depositos(models.Model):#tabla control de montos 
-    _name = 'tabla.control.depositos'
-
-    relacion = fields.Many2one('budget.amount.allocated', ondelete="cascade")
+    budget_amount_allocated_id = fields.Many2one('budget.amount.allocated', ondelete="cascade")
     currency_id = fields.Many2one('res.currency', string='Currency')
     assigment_amount = fields.Monetary(string="Monto asignado",digits=(12,2),required=True)
     deposit_amount = fields.Monetary(string="Monto depositado",required=True,readonly=True)
@@ -706,7 +744,7 @@ class tabla_control_depositos(models.Model):#tabla control de montos
     Comments = fields.Char(string="Observaciones")
     move_id = fields.Many2one('account.move',string="Asiento contable")
 
-class budget_amount_allocated_lines(models.Model): #parte del modelo budget.amount.allocated.lines que esta  Control de montos asignados pag 24 doc
+class BudgetAmountAllocatedLines(models.Model): #parte del modelo budget.amount.allocated.lines que esta  Control de montos asignados pag 24 doc
     _name = 'budget.amount.allocated.lines'
 
 
@@ -727,28 +765,22 @@ class budget_amount_allocated_lines(models.Model): #parte del modelo budget.amou
     geographic_location_id = fields.Many2one('budget.geographic.location',string="Ubicación geográfica")
     key_portfolio_id = fields.Many2one('budget_key_portfolio',string="Clave cartera")
 
-class budget_adjustement(models.Model):#modelo para las Adecuaciones 6.1
+class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
     _name='budget.adjustement'
-
-
-    state = fields.Selection([('draft', 'Borrador'),('approve','Aprovado'),('solicitud','Solicitud'),('reject','Rechazado'),('cancel','Cancelado')], default="draft")
     code = fields.Char(string="Folio",required=True)
     movement_date = fields.Date(string="Fecha",default=fields.Date.today(),required=True)
     budget_id = fields.Many2one('crossovered.budget',string="Presupuesto",required=True)
     description = fields.Char(string="Observaciones")
     file = fields.Binary(string="Archivo adecuación")
+    state = fields.Selection([('draft', 'Borrador'),('approve','Aprovado'),('solicitud','Solicitud'),('reject','Rechazado'),('cancel','Cancelado')], default="draft")
     reason_for_rejection = fields.Char(string="Motivo del rechazo")
     move_id = fields.Many2one('account.move',string="Asiento contable")
-
-    tabla_ade= fields.One2many('tabla.budget.adjustement.line','relacion')
-
-class tabla_budget_adjustement_line(models.Model):#modelo el cual se muestra en una pestaña con el nombre líneas de adecuación relacionada al budegte adjustement
-    _name ='tabla.budget.adjustement.line'
-
-    relacion = fields.Many2one('budget.adjustement',ondelete="cascade")
+    budget_adjustement_line= fields.One2many('budget.adjustement.lines','adjustement_id')
+    
+class BudgetAdjustementLines(models.Model):#modelo el cual se muestra en una pestaña con el nombre líneas de adecuación relacionada al budegte adjustement
+    _name ='budget.adjustement.lines'
 
     adjustement_id = fields.Many2one('budget.adjustement',string="Adecuación",required=True)
-
     programmatic_code = fields.Char(string="Código programático",required=True)
     type = fields.Selection([('a','Aumento'),('d','Disminución')],string="Tipo",required=True)
     amount = fields.Float(string="Importe",required=True)
@@ -765,27 +797,27 @@ class tabla_budget_adjustement_line(models.Model):#modelo el cual se muestra en 
     geographic_location_id = fields.Many2one('budget.geographic.location',string="Ubicación Geográfica",required=True)
     key_portfolio_id = fields.Many2one('budget.key.portfolio',string="Clave cartera",required=True)
 
-class budget_import_recalendarization(models.Model):#modelo para Recalendarizaciones pag 33
+class BudgetImportRecalendarization(models.Model):#modelo para Recalendarizaciones pag 33
     _name = 'budget.import.recalendarization'
 
-    state = fields.Selection([('draft','Borrador'),('import','Importado'),('reject','Rechazado'),('cancel','Cancelado')],default="draft")
     code = fields.Char(string="Folio",required=True)
     budget_id = fields.Many2one('crossovered.budget',string="Presupuesto",required=True)
     file = fields.Binary(string="Archivo recalendarización",required=True)
     description = fields.Char(string="Observaciones")
     record_number = fields.Integer(string="Numeros de registros",default=0,readonly=True)
     records_number_imported = fields.Integer(string="Número de registros importados",default=0,readonly=True)
+    state = fields.Selection([('draft','Borrador'),('import','Importado'),('reject','Rechazado'),('cancel','Cancelado')],default="draft")
     reason_for_rejection = fields.Char(string="Motivo del rechazo")
 
-class budget_rescheduling(models.Model):# modelo para Control de recalendarizaciones. pag35
+class BudgetRescheduling(models.Model):# modelo para Control de recalendarizaciones. pag35
     _name = 'budget.rescheduling'
 
-    state = fields.Selection([('draft','Borrador'),('import','Importado'),('reject','Rechazado'),('cancel','Cancelado')],default="draft")
     code = fields.Char(string="Folio",required=True)
     budget_id = fields.Many2one('crossovered.budget',string="Presupuesto",readonly=True)
     programmatic_code = fields.Char(string="Código programático",required=True)
     date = fields.Date(string="Fecha",default=fields.Date.today(),required=True)
     to_period = fields.Selection([('t1','Trimestre 1'),('t2','Trimestre 2'),('t3','Trimestre 3'),('t4','Trimestre 4')],string="Enviar a",required=True)
+    state = fields.Selection([('draft','Borrador'),('import','Importado'),('reject','Rechazado'),('cancel','Cancelado')],default="draft")
     reason_for_rejection = fields.Char(string="Motivo del rechazo")
     import_recalendarization_id = fields.Many2one('budget.import.recalendarization',string="Recalendarización",required=True)
     #branch_id =fields.Many2one('res.branch',string="Dependencia",required=True)
@@ -802,7 +834,7 @@ class budget_rescheduling(models.Model):# modelo para Control de recalendarizaci
     key_portfolio_id = fields.Many2one('budget.key.portfolio',string="Clave cartera",required=True)
     move_id = fields.Many2one('account.move',string="Asiento contable")
 
-class inherit_campos_nuevos_account(models.Model):#campos adicionales a este modelo Validación del presupuesto, solicitudes de pago.
+class InheritAccountMoveLine(models.Model):#campos adicionales a este modelo Validación del presupuesto, solicitudes de pago.
     _inherit = 'account.move.line'
 
     programmatic_code = fields.Char(string="Código programático",required=True)
@@ -825,7 +857,7 @@ class inherit_campos_nuevos_account(models.Model):#campos adicionales a este mod
     agreement_type_id = fields.Many2one('budget.agreement.type',string="Tipo de convenio")
     agreement_number = fields.Many2one('agreement.agreement',string="Número de convenio")
 
-class caampos_accon_inhe(models.Model):
+class InheritAccountMove(models.Model):
     _inherit  = 'account.move'
 
     
