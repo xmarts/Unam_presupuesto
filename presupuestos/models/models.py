@@ -589,12 +589,117 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
                 self.record_numbers = tot_reg
                 self.imported_registration_numbers = count_valid
                 self.programatic_code = data_code
+                if count_valid == tot_reg:
+                    self.create_budget_post_from_file()
         else:
             self.record_numbers = 0
             self.imported_registration_numbers = 0
             self.programatic_code = False
 
-   
+    def create_budget_post_from_file(self):
+        if self.file_import:
+            data = base64.decodestring(self.file_import)
+            fobj = tempfile.NamedTemporaryFile(delete=False)
+            fname = fobj.name
+            fobj.write(data)
+            fobj.close()
+            file = open(fname,"r")
+            model_budget_item = self.env['ir.model'].search([('model','=','budget.item')])
+            structure = self.env['budget.structure'].search([('code_part_pro','=',True)])
+            print(model_budget_item.name)
+            budget_item_structure = self.env['budget.structure'].search([('code_part_pro','=',True),('catalog_id','=',model_budget_item.id)])
+            print(budget_item_structure.name)
+            for x in file:
+                position = x[budget_item_structure.position_from:budget_item_structure.position_to]
+                search_budget_item = self.env[str('budget.item')].search([(budget_item_structure.to_search_field,'=',str(position))])
+                print(">>>>>>>>>> CODIGOS <<<<<<<<<<",x,position,search_budget_item.name,search_budget_item.expense_account.name)
+                vals = {
+                    'name':x,
+                    'account_ids':[(6, 0, [search_budget_item.expense_account.id])]
+                }
+                print(vals)
+                account_budget_post = self.env['account.budget.post'].create(vals)
+                # print(account_budget_post)
+                subdependence_id = False
+                program_id = False
+                subprogram_id = False
+                item_id = False
+                resource_origin_id = False
+                institutional_activity_id = False
+                conpp_id = False
+                conpa_id = False
+                expense_type_id = False
+                geographic_location_id = False
+                key_portfolio_id = False
+                for y in structure:
+                    position = x[y.position_from:y.position_to]
+                    if y.catalog_id.model:
+                        if y.catalog_id.model == 'budget.subdependence':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                subdependence_id = search_model.id
+                        if y.catalog_id.model == 'budget.program':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                program_id = search_model.id
+                        if y.catalog_id.model == 'budget.subprogram':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                subprogram_id = search_model.id
+                        if y.catalog_id.model == 'budget.item':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                item_id = search_model.id
+                        if y.catalog_id.model == 'budget.resource.origin':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                resource_origin_id = search_model.id
+                        if y.catalog_id.model == 'budget.institutional.activity':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                institutional_activity_id = search_model.id
+                        if y.catalog_id.model == 'budget.program.conversion':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                conpp_id = search_model.id
+                        if y.catalog_id.model == 'budget.item.conversion':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                conpa_id = search_model.id
+                        if y.catalog_id.model == 'budget.expense.type':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                expense_type_id = search_model.id
+                        if y.catalog_id.model == 'budget.geographic.location':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                geographic_location_id = search_model.id
+                        if y.catalog_id.model == 'budget.key.portfolio':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            if search_model:
+                                key_portfolio_id = search_model.id
+
+                now = datetime.now()
+                vars = {
+                    'programmatic_account':x,
+                    'subdependence_id':subdependence_id,
+                    'program_id':program_id,
+                    'subprogram_id':subprogram_id,
+                    'item_id':item_id,
+                    'resource_origin_id':resource_origin_id,
+                    'institutional_activity_id':institutional_activity_id,
+                    'conpp_id':conpp_id,
+                    'conpa_id':conpa_id,
+                    'expense_type_id':expense_type_id,
+                    'geographic_location_id':geographic_location_id,
+                    'key_portfolio_id':key_portfolio_id,
+                    'date_from':datetime.today().replace(day=1),
+                    'date_to':date(now.year, now.month, 1),
+                    'planned_amount':0,
+                    'crossovered_budget_id': self.id
+                }
+                print(vars)
+                account_budget_line = self.env['crossovered.budget.lines'].create(vars)
 
 class InvalidDataTXT(models.Model):#tabla para crear los registros del txt incorrectos
     _name = 'invalid.row'
