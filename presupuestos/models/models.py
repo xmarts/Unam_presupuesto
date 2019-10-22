@@ -731,11 +731,11 @@ class InheritCrossoveredBudgetLine(models.Model):# modelo en el cual se hace un 
     amount_modified = fields.Float(string="Modificado",digits=(12,2))
     amount_available2 = fields.Float(string="Disponible",digits=(12,2))
     programmatic_account = fields.Char(string="Código programático")#El valor debe estar separado por (.) por cada segmento del código programático
-    branch_id = fields.Many2one('branch',string="Dependencia")
+    # branch_id = fields.Many2one('branch',string="Dependencia")
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencia")
     program_id = fields.Many2one('budget.program',string="Programa")
     subprogram_id = fields.Many2one('budget.subprogram',string="Subprograma")
-    item_id = fields.Many2one(' budget.item',string="Partida")
+    item_id = fields.Many2one('budget.item',string="Partida")
     resource_origin_id = fields.Many2one('budget.resource.origin',string="Origen del recurso")
     institutional_activity_id = fields.Many2one('budget.institutional.activity',string="Actividad institucional")
     conpp_id = fields.Many2one('budget.program.conversion',string="Conversión de programa presupuestario")
