@@ -351,7 +351,7 @@ class ProjectProjectMod(models.Model):# modelo para Proyectos (NP). haciendo inh
     _inherit = 'project.project'
 
 
-    code = fields.Char(string="Código",required=True, size=5 )#aki falta lo relacionado al account.analityc.accoun
+    code = fields.Char(string="Código",required=True, size=6 )#aki falta lo relacionado al account.analityc.accoun
     type_project_id = fields.Many2one('budget.project.type',string="Tipo de proyecto",required=True)
     sub_type = fields.Selection([('spp','(SPP) Sistema de pagos a proveedores de bienes y prestadores de servicio.'),('cbc','(CBC) Cuenta bancaria con chequera.')],string="Subtipo de proyecto",required=True)
     amount_allocated = fields.Monetary(string="Monto asignado",required=True)
@@ -366,12 +366,14 @@ class ProjectProjectMod(models.Model):# modelo para Proyectos (NP). haciendo inh
             val = obj.code
             if val.isdigit():
                 if len(val)==1:
-                    obj.code = '0000'+obj.code
+                    obj.code = '00000'+obj.code
                 if len(val)==2:
-                    obj.code = '000'+obj.code
+                    obj.code = '0000'+obj.code
                 if len(val)==3:
-                    obj.code = '00'+obj.code
+                    obj.code = '000'+obj.code
                 if len(val)==4:
+                    obj.code = '00'+obj.code 
+                if len(val)==5:
                     obj.code = '0'+obj.code 
             else:
                 raise ValidationError(_('Valor Invalido'))
@@ -482,10 +484,68 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
     sequence = fields.Char(string="Secuencia",required=True)
     name = fields.Char(string="Nombre",required=True)
     catalog_id = fields.Many2one('ir.model',string="Catálogo")
-    to_search_field = fields.Char(string="Campo a buscar", help="Colocar nombre tecnico del campo a comparar en el modelo, por ejemplo 'code'")
+    to_search_field = fields.Many2one('ir.model.fields',string="Campo a buscar", help="Colocar nombre tecnico del campo a comparar en el modelo, por ejemplo 'code'")
     position_from  = fields.Integer(string='Posición inicial',required=True)
     position_to  = fields.Integer(string="Posición final",required=True)
     code_part_pro = fields.Boolean(string="Forma parte del codigo programático")
+    is_year = fields.Boolean(
+        string='Año',
+        default=False
+    )
+    is_check_digit = fields.Boolean(
+        string='Digito verificador',
+        default=False
+    )
+    is_authorized_budget = fields.Boolean(
+        string='Presupuesto Autorizado',
+        default=False
+    )
+    is_asigned_budget = fields.Boolean(
+        string='Presupuesto Asignado',
+        default=False
+    )
+
+    @api.onchange('catalog_id')
+    def _onchange_catalog_id(self):
+        self.to_search_field = ''
+
+    @api.onchange('is_year','is_check_digit','is_authorized_budget','is_asigned_budget')
+    def _onchange_is_fields(self):
+        if self.is_year == True or self.is_check_digit == True or self.is_authorized_budget == True or self.is_asigned_budget == True:
+            self.catalog_id = ''
+            self.to_search_field = ''
+
+    @api.constrains('is_year')
+    def _check_year(self):
+        if self.is_year == True:
+            search = self.env['budget.structure'].search(
+                [('is_year','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
+            if search:
+                raise ValidationError(_('Solo puede haber un año por orden programático'))  
+
+    @api.constrains('is_check_digit')
+    def _check_cd(self):
+        if self.is_check_digit == True:
+            search = self.env['budget.structure'].search(
+                [('is_check_digit','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
+            if search:
+                raise ValidationError(_('Solo puede haber un digito verificador por orden programático'))   
+
+    @api.constrains('is_authorized_budget')
+    def _check_autb(self):
+        if self.is_authorized_budget == True:
+            search = self.env['budget.structure'].search(
+                [('is_authorized_budget','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
+            if search:
+                raise ValidationError(_('Solo puede haber un presupuesto autorizado por orden programático'))   
+
+    @api.constrains('is_asigned_budget')
+    def _check_asigb(self):
+        if self.is_asigned_budget == True:
+            search = self.env['budget.structure'].search(
+                [('is_asigned_budget','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
+            if search:
+                raise ValidationError(_('Solo puede haber un presupuesto asignado por orden programático'))   
 
     #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
     @api.constrains('sequence')
@@ -496,9 +556,9 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
             if val.isdigit()==False:
                 raise ValidationError(_('Valor Invalido'))
             if val.isdigit():
-                busca = self.env['budget.structure'].search(
+                search = self.env['budget.structure'].search(
                     [('catalog_id','=',self.catalog_id.id),('sequence', '!=', self.sequence)],limit=1)
-                if busca and self.catalog_id:
+                if search and self.catalog_id:
                     raise ValidationError(_('Catálogo duplicado, solo puede haber un registro por catálogo '))   
 
         rec = self.env['budget.structure'].search(
@@ -541,7 +601,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
 
     #funcion para leer archivos txt 
     @api.onchange('filename')
-    def onchange_archivo(self):
+    def onchange_file(self):
         self.invalid_rows = [(5, 0, 0)]
         if self.filename:
             ext = str(self.filename.split('.')[1])
@@ -551,6 +611,40 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
             self.record_numbers = 0 
             self.imported_registration_numbers = 0                  
     
+
+    def create_account_move_unam(self):
+        vals = {
+            'ref':self.name
+        }
+        move = self.env['account.move'].create(vals)
+        for x in self.crossovered_budget_line:
+            self.env['account.move.line'].create({
+                'move_id':move.id,
+                'account_id':39,
+                'partner_id':self.company_id.partner_id.id,
+                'name':'Egresos Por Ejercer',
+                'credit':1,
+                'balance':1,
+                'price_unit':-1,
+                'quantity':1
+                })
+            self.env['account.move.line'].create({
+                'move_id':move.id,
+                'account_id':38,
+                'partner_id':self.company_id.partner_id.id,
+                'name':'Egresos Aprobados',
+                'debit':-1,
+                'credit':0,
+                'balance':-1,
+                'price_unit':1,
+                'quantity':1
+                })
+        self.move_id = move.id
+
+
+    #Lee el archivo para revisar si todas las filas del registro son correctas,
+    # si no lo son guarda en una tabla la linea que esta mal y su lista de errores,
+    # si todas son correctas ejecuta la siguiente funcion
     def read_file(self):
         self.invalid_rows = [(5, 0, 0)]
         if self.file_import:
@@ -572,7 +666,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
                 for y in structure:
                     position = x[y.position_from:y.position_to]
                     if y.catalog_id.model:
-                        search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                        search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                         if not search_model:
                             valid = False
                             message += ' Código invalido en el modelo '+ y.catalog_id.name + '. \n'
@@ -590,12 +684,17 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
                 self.imported_registration_numbers = count_valid
                 self.programatic_code = data_code
                 if count_valid == tot_reg:
-                    self.create_budget_post_from_file()
+                    try:
+                        self.create_budget_post_from_file()
+                    except:
+                        print('ERROR AL EJECUTAR create_budget_post_from_file()')
         else:
             self.record_numbers = 0
             self.imported_registration_numbers = 0
             self.programatic_code = False
 
+    #Si la funcion anterior se termino correctamente se ejecuta la siguiente funcion para generar lss
+    # lineas de presupuesto y sus posisiones.
     def create_budget_post_from_file(self):
         if self.file_import:
             data = base64.decodestring(self.file_import)
@@ -607,11 +706,12 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
             model_budget_item = self.env['ir.model'].search([('model','=','budget.item')])
             structure = self.env['budget.structure'].search([('code_part_pro','=',True)])
             print(model_budget_item.name)
+            account_budget_post = False
             budget_item_structure = self.env['budget.structure'].search([('code_part_pro','=',True),('catalog_id','=',model_budget_item.id)])
             print(budget_item_structure.name)
             for x in file:
                 position = x[budget_item_structure.position_from:budget_item_structure.position_to]
-                search_budget_item = self.env[str('budget.item')].search([(budget_item_structure.to_search_field,'=',str(position))])
+                search_budget_item = self.env[str('budget.item')].search([(budget_item_structure.to_search_field.name,'=',str(position))])
                 print(">>>>>>>>>> CODIGOS <<<<<<<<<<",x,position,search_budget_item.name,search_budget_item.expense_account.name)
                 vals = {
                     'name':x,
@@ -631,55 +731,66 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
                 expense_type_id = False
                 geographic_location_id = False
                 key_portfolio_id = False
+                year = ''
+                verdigit = ''
+                autorized = 0
+                asigned = 0
                 for y in structure:
                     position = x[y.position_from:y.position_to]
+                    if y.is_year == True:
+                        year = position
+                    if y.is_check_digit == True:
+                        verdigit = position
+                    if y.is_authorized_budget == True:
+                        autorized = position
+                    if y.is_asigned_budget == True:
+                        asigned = position
                     if y.catalog_id.model:
                         if y.catalog_id.model == 'budget.subdependence':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 subdependence_id = search_model.id
                         if y.catalog_id.model == 'budget.program':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 program_id = search_model.id
                         if y.catalog_id.model == 'budget.subprogram':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 subprogram_id = search_model.id
                         if y.catalog_id.model == 'budget.item':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 item_id = search_model.id
                         if y.catalog_id.model == 'budget.resource.origin':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 resource_origin_id = search_model.id
                         if y.catalog_id.model == 'budget.institutional.activity':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 institutional_activity_id = search_model.id
                         if y.catalog_id.model == 'budget.program.conversion':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 conpp_id = search_model.id
                         if y.catalog_id.model == 'budget.item.conversion':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 conpa_id = search_model.id
                         if y.catalog_id.model == 'budget.expense.type':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 expense_type_id = search_model.id
                         if y.catalog_id.model == 'budget.geographic.location':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 geographic_location_id = search_model.id
                         if y.catalog_id.model == 'budget.key.portfolio':
-                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field,'=',str(position))])
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 key_portfolio_id = search_model.id
-
-                now = datetime.now()
+                print(asigned,autorized,year)
                 vars = {
                     'programmatic_account':x,
                     'subdependence_id':subdependence_id,
@@ -693,9 +804,12 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
                     'expense_type_id':expense_type_id,
                     'geographic_location_id':geographic_location_id,
                     'key_portfolio_id':key_portfolio_id,
-                    'date_from':datetime.today().replace(day=1),
-                    'date_to':date(now.year, now.month, 1),
-                    'planned_amount':0,
+                    'date_from':datetime(int(year), 1, 1),
+                    'date_to':datetime(int(year), 3, 31),
+                    'planned_amount':float(autorized),
+                    'authorized_amount':float(autorized),
+                    'amount_allocate':float(asigned),
+                    'general_budget_id':account_budget_post.id,
                     'crossovered_budget_id': self.id
                 }
                 print(vars)
@@ -862,7 +976,7 @@ class BudgetRescheduling(models.Model):# modelo para Control de recalendarizacio
 class InheritAccountMoveLine(models.Model):#campos adicionales a este modelo Validación del presupuesto, solicitudes de pago.
     _inherit = 'account.move.line'
 
-    programmatic_code = fields.Char(string="Código programático",required=True)
+    programmatic_code = fields.Char(string="Código programático",required=False)
     #branch_id = fields.Many2one('res.branch',string="Dependencia")
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdepencencia")
     program_id = fields.Many2one('budget.program',string="Programa")
@@ -884,9 +998,8 @@ class InheritAccountMoveLine(models.Model):#campos adicionales a este modelo Val
 
 class InheritAccountMove(models.Model):
     _inherit  = 'account.move'
-
     
-    sub_state = fields.Selection([('so','Solicitud'),('ap','Aprovado'),('app','Aprovado para pago'),('ma','Medio de pago asignado'),('pa','Pagado'),('re','Rechazado'),('ca','Cancelado'),('pna','Pago no aplicado'),('mpc','Medio de pago cancelado'),('rpp','Rechazado por pago')],string="Sub-Estado",required=True)
+    sub_state = fields.Selection([('so','Solicitud'),('ap','Aprovado'),('app','Aprovado para pago'),('ma','Medio de pago asignado'),('pa','Pagado'),('re','Rechazado'),('ca','Cancelado'),('pna','Pago no aplicado'),('mpc','Medio de pago cancelado'),('rpp','Rechazado por pago')],string="Sub-Estado",required=True,default='so')
 
 
 
