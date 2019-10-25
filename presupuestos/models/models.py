@@ -584,26 +584,6 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
         [('sequence', '=', self.sequence),('id', '!=', self.id)])
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
- 
-
-class InheritAccountMoveLine(models.Model):#modelo para Asientos contables,el cual hace un inherit al modelo  account.move.lines agregando los siguientes campos
-    _inherit ='account.move.line'
-
-    branch_id = fields.Char(string="Dependencia")
-    subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencia")
-    program_id = fields.Many2one('budget.program',string="Programa")
-    subprogram_id = fields.Many2one('budget.subprogram',string="Subprograma")
-    item_id = fields.Many2one('budget.item',string="Partida")
-    resource_origin_id = fields.Many2one('budget.resource.origin',string="Origen del recurso")
-    institutional_activity_id = fields.Many2one('budget.institutional.activity',string="Actividad institucional")
-    conpp_id = fields.Many2one('budget.program.conversion',string="Conversión de programa presupuestario")
-    conpa_id = fields.Many2one('budget.item.conversion',string="Conversión con partida")
-    expense_type_id = fields.Many2one('budget.expense.type',string="Tipo de gasto")
-    geographic_location_id = fields.Many2one('budget.geographic.location',string="Ubicación geográfica")
-    key_portfolio_id = fields.Many2one('budget.key.portfolio',string="Clave cartera")
-    type_project_id =fields.Many2one('budget.project.type',string="Tipo de proyecto")
-    project_number_id = fields.Many2one('project.project',string="Número de proyecto")
-
 
 class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al modelo crossovered.budget
     _inherit = 'crossovered.budget'
