@@ -1023,10 +1023,10 @@ class InheritAccountMoveLine(models.Model):#campos adicionales a este modelo Val
     geographic_location_id = fields.Many2one('budget.geographic.location',string="Ubicación geográfica")
     key_portfolio_id = fields.Many2one('budget.key.portfolio',string="Clave cartera")
     type_project_id = fields.Many2one('budget.project.type',string="Tipo de proyecto")
-    project_number = fields.Many2one('project.project',string="Numeros de proyecto")
     stage = fields.Many2one('budget.stage',string="Etapa")
     agreement_type_id = fields.Many2one('budget.agreement.type',string="Tipo de convenio")
     agreement_number = fields.Many2one('agreement.agreement',string="Número de convenio")
+    project_number_id = fields.Many2one('project.project',string="Número de proyecto")
 
 class InheritAccountMove(models.Model):
     _inherit  = 'account.move'
