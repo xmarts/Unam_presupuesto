@@ -614,6 +614,15 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
             self.record_numbers = 0 
             self.imported_registration_numbers = 0                  
     
+    def action_budget_confirm(self):
+        res = super(InheritCrossoveredBudget, self).action_budget_confirm()
+        self.create_account_move_unam()
+        return res
+
+    def action_budget_cancel(self):
+        res = super(InheritCrossoveredBudget, self).action_budget_cancel()
+        self.move_id.unlink()
+        return res
 
     def create_account_move_unam(self):
         vals = {
@@ -621,27 +630,46 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
         }
         move = self.env['account.move'].create(vals)
         for x in self.crossovered_budget_line:
-            self.env['account.move.line'].create({
+            v1 = {
                 'move_id':move.id,
-                'account_id':39,
+                'account_id':x.item_id.expense_account.id,
                 'partner_id':self.company_id.partner_id.id,
-                'name':'Egresos Por Ejercer',
-                'credit':1,
-                'balance':1,
-                'price_unit':-1,
-                'quantity':1
-                })
-            self.env['account.move.line'].create({
+                'name':str(x.item_id.expense_account.code)+' Ley de ingresos por ejecutar',
+                'debit':x.authorized_amount,
+                'account_internal_type':'other',
+                'programmatic_code':x.programmatic_account
+                }
+            v2 = {
                 'move_id':move.id,
-                'account_id':38,
+                'account_id':x.item_id.debtor_account.id,
                 'partner_id':self.company_id.partner_id.id,
-                'name':'Egresos Aprobados',
-                'debit':-1,
-                'credit':0,
-                'balance':-1,
-                'price_unit':1,
-                'quantity':1
-                })
+                'name':str(x.item_id.debtor_account.code)+' Ley de ingresos estimada',
+                'credit':x.authorized_amount,
+                'account_internal_type':'receivable',
+                'programmatic_code':x.programmatic_account
+                }
+            v3 = {
+                'move_id':move.id,
+                'account_id':x.item_id.expense_account.id,
+                'partner_id':self.company_id.partner_id.id,
+                'name':str(x.item_id.expense_account.code)+' Presupuesto de egresos a ejercer',
+                'debit':x.amount_allocate,
+                'account_internal_type':'other',
+                'programmatic_code':x.programmatic_account
+                }
+            v4 = {
+                'move_id':move.id,
+                'account_id':x.item_id.debtor_account.id,
+                'partner_id':self.company_id.partner_id.id,
+                'name':str(x.item_id.debtor_account.code)+' Presupuesto de egresos aprobado',
+                'credit':x.amount_allocate,
+                'account_internal_type':'receivable',
+                'programmatic_code':x.programmatic_account
+                }
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v1)
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v2)
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v3)
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v4)
         self.move_id = move.id
 
 
