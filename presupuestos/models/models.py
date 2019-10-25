@@ -209,7 +209,14 @@ class BudgetProgramConversion(models.Model):#modelo para Conversión de Programa
     def _check_code(self):
         for obj in self: 
             val = obj.code
-            if val.isdigit()==False:
+            if val.isdigit():
+                if len(val)==1:
+                    obj.code = '000'+obj.code
+                if len(val)==2:
+                    obj.code = '00'+obj.code 
+                if len(val)==3:
+                    obj.code = '0'+obj.code
+            else:
                 raise ValidationError(_('Valor Invalido'))
         rec = self.env['budget.program.conversion'].search(
         [('code', '=', self.code),('id', '!=', self.id)])
