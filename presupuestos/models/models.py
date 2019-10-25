@@ -597,6 +597,10 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
     move_id = fields.Many2one('account.move',string="Asiento contable",readonly=True)
     invalid_rows = fields.One2many('invalid.row','crossovered_budget_id')
     programatic_code = fields.Char(string="codigo programático")
+    correct_import = fields.Boolean(
+        string='Importación Correcta?',
+        default=False
+    )
 
     #funcion para leer archivos txt 
     @api.onchange('filename')
