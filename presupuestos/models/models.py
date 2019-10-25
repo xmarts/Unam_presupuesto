@@ -345,9 +345,11 @@ class BudgetProjectType(models.Model):#modelo para el Tipo de proyecto(TP).
             if val.isdigit()==False:
                 raise ValidationError(_('Valor Invalido.'))
             else:
-                if  val.isdigit():
-                    if len(val)<=1:
-                        raise ValidationError(_('Falta completar los caracteres necesarios del código.'))    
+                if val.isdigit():
+                    if len(val)==1:
+                        obj.code = '0'+obj.code
+                else:
+                    raise ValidationError(_('Falta completar los caracteres necesarios del código.'))    
         rec = self.env['budget.project.type'].search(
         [('code', '=', self.code),('id', '!=', self.id)])
         if rec:
@@ -452,9 +454,19 @@ class AgreementAgreement(models.Model):#modelo para Convenios(NC)
             if val.isdigit()==False:
                 raise ValidationError(_('Valor Invalido.'))
             else:
-                if  val.isdigit():
-                    if len(val)<=5:
-                        raise ValidationError(_('Falta completar los caracteres necesarios del código.'))    
+                if val.isdigit():
+                    if len(val)==1:
+                        obj.code = '00000'+obj.code
+                    if len(val)==2:
+                        obj.code = '0000'+obj.code
+                    if len(val)==3:
+                        obj.code = '000'+obj.code
+                    if len(val)==4:
+                        obj.code = '00'+obj.code 
+                    if len(val)==5:
+                        obj.code = '0'+obj.code 
+                else:
+                    raise ValidationError(_('Falta completar los caracteres necesarios del código.'))    
         rec = self.env['agreement.agreement'].search(
         [('code', '=', self.code),('id', '!=', self.id)])
         if rec:
