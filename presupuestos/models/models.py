@@ -715,6 +715,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
                 self.imported_registration_numbers = count_valid
                 self.programatic_code = data_code
                 if count_valid == tot_reg:
+                    self.correct_import = True
                     try:
                         self.create_budget_post_from_file()
                     except:
