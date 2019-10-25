@@ -1324,14 +1324,17 @@
     <xpath expr="//field[@name='invoice_line_ids']//tree//field[@name='analytic_account_id']" position="before">
       <field name="programmatic_code"/>
     </xpath>
+    <xpath expr="//field[@name='line_ids']/tree//field[@name='account_id']" position="before">
+      <field name="programmatic_code"/>
+    </xpath>
     
     <xpath expr="//field[@name='invoice_line_ids']//form//field[@name='name']" position="after">
 
             <group>
               
-            <group>              
+            <group >              
             <field name="programmatic_code"/>
-            <field name="branch_id"/>
+            <!-- <field name="branch_id"/> -->
             <field name="subdependence_id"/>
             <field name="program_id"/>
             <field name="subprogram_id"/>
