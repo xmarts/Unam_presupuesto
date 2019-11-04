@@ -496,94 +496,6 @@ class BudgetCogConac(models.Model):#modelo para Catálogo COG CONAC ()
         if rec:
             raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
-class BudgetStructure(models.Model):#modelo para Orden del código programático.
-    _name = 'budget.structure'
-    _description = 'Orden Programatico'
-
-    sequence = fields.Char(string="Secuencia",required=True)
-    name = fields.Char(string="Nombre",required=True)
-    catalog_id = fields.Many2one('ir.model',string="Catálogo")
-    to_search_field = fields.Many2one('ir.model.fields',string="Campo a buscar", help="Colocar nombre tecnico del campo a comparar en el modelo, por ejemplo 'code'")
-    position_from  = fields.Integer(string='Posición inicial',required=True)
-    position_to  = fields.Integer(string="Posición final",required=True)
-    code_part_pro = fields.Boolean(string="Forma parte del codigo programático")
-    is_year = fields.Boolean(
-        string='Año',
-        default=False
-    )
-    is_check_digit = fields.Boolean(
-        string='Digito verificador',
-        default=False
-    )
-    is_authorized_budget = fields.Boolean(
-        string='Presupuesto Autorizado',
-        default=False
-    )
-    is_asigned_budget = fields.Boolean(
-        string='Presupuesto Asignado',
-        default=False
-    )
-
-    @api.onchange('catalog_id')
-    def _onchange_catalog_id(self):
-        self.to_search_field = ''
-
-    @api.onchange('is_year','is_check_digit','is_authorized_budget','is_asigned_budget')
-    def _onchange_is_fields(self):
-        if self.is_year == True or self.is_check_digit == True or self.is_authorized_budget == True or self.is_asigned_budget == True:
-            self.catalog_id = ''
-            self.to_search_field = ''
-
-    @api.constrains('is_year')
-    def _check_year(self):
-        if self.is_year == True:
-            search = self.env['budget.structure'].search(
-                [('is_year','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
-            if search:
-                raise ValidationError(_('Solo puede haber un año por orden programático'))  
-
-    @api.constrains('is_check_digit')
-    def _check_cd(self):
-        if self.is_check_digit == True:
-            search = self.env['budget.structure'].search(
-                [('is_check_digit','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
-            if search:
-                raise ValidationError(_('Solo puede haber un digito verificador por orden programático'))   
-
-    @api.constrains('is_authorized_budget')
-    def _check_autb(self):
-        if self.is_authorized_budget == True:
-            search = self.env['budget.structure'].search(
-                [('is_authorized_budget','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
-            if search:
-                raise ValidationError(_('Solo puede haber un presupuesto autorizado por orden programático'))   
-
-    @api.constrains('is_asigned_budget')
-    def _check_asigb(self):
-        if self.is_asigned_budget == True:
-            search = self.env['budget.structure'].search(
-                [('is_asigned_budget','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
-            if search:
-                raise ValidationError(_('Solo puede haber un presupuesto asignado por orden programático'))   
-
-    #funcion para autocompletar con un cero ala izquierda y validar que el codigo no se repirta y sea unico.
-    @api.constrains('sequence')
-    def _check_code(self):
-        for obj in self: 
-            val = obj.sequence
-
-            if val.isdigit()==False:
-                raise ValidationError(_('Valor Invalido'))
-            if val.isdigit():
-                search = self.env['budget.structure'].search(
-                    [('catalog_id','=',self.catalog_id.id),('sequence', '!=', self.sequence)],limit=1)
-                if search and self.catalog_id:
-                    raise ValidationError(_('Catálogo duplicado, solo puede haber un registro por catálogo '))   
-
-        rec = self.env['budget.structure'].search(
-        [('sequence', '=', self.sequence),('id', '!=', self.id)])
-        if rec:
-            raise ValidationError(_('Valor duplicado, el código debe ser único.'))
 
 class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al modelo crossovered.budget
     _inherit = 'crossovered.budget'
@@ -596,7 +508,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
     budget_of_project_dgpo = fields.Boolean(string="Presupuesto de DGPO")
     move_id = fields.Many2one('account.move',string="Asiento contable",readonly=True)
     invalid_rows = fields.One2many('invalid.row','crossovered_budget_id')
-    programatic_code = fields.Char(string="codigo programático")
+    programatic_code = fields.Text(string="codigo programático")
     correct_import = fields.Boolean(
         string='Importación Correcta?',
         default=False
@@ -693,6 +605,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
             data_code = ''
             number_line = 0
             for x in file:
+                pc = ''
                 number_line += 1
                 for y in structure:
                     position = x[y.position_from:y.position_to]
@@ -702,24 +615,25 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
                             valid = False
                             message += ' Código invalido en el modelo '+ y.catalog_id.name + '. \n'
                     data_code += '\n'+y.name+', '  
+                    pc += position + ' '
                 if valid == True:
                     count_valid += 1
                 else:
                     self.invalid_rows.create({
-                        'code':x,
+                        'code':pc,
                         'description':'Linea '+ str(number_line) +message, 
                         'crossovered_budget_id': self.id,
                     })
                 tot_reg += 1
-                self.record_numbers = tot_reg
-                self.imported_registration_numbers = count_valid
-                self.programatic_code = data_code
-                if count_valid == tot_reg:
-                    self.correct_import = True
-                    try:
-                        self.create_budget_post_from_file()
-                    except:
-                        print('ERROR AL EJECUTAR create_budget_post_from_file()')
+            self.record_numbers = tot_reg
+            self.imported_registration_numbers = count_valid
+            self.programatic_code = data_code
+            if count_valid == tot_reg:
+                self.correct_import = True
+                try:
+                    self.create_budget_post_from_file()
+                except:
+                    print('ERROR AL EJECUTAR create_budget_post_from_file()')
         else:
             self.record_numbers = 0
             self.imported_registration_numbers = 0
@@ -728,7 +642,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
     #Si la funcion anterior se termino correctamente se ejecuta la siguiente funcion para generar lss
     # lineas de presupuesto y sus posisiones.
     def create_budget_post_from_file(self):
-        if self.file_import:
+        if self.file_import and (self.record_numbers == self.imported_registration_numbers):
             data = base64.decodestring(self.file_import)
             fobj = tempfile.NamedTemporaryFile(delete=False)
             fname = fobj.name
@@ -742,6 +656,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
             budget_item_structure = self.env['budget.structure'].search([('code_part_pro','=',True),('catalog_id','=',model_budget_item.id)])
             print(budget_item_structure.name)
             for x in file:
+                pc = ''
                 position = x[budget_item_structure.position_from:budget_item_structure.position_to]
                 search_budget_item = self.env[str('budget.item')].search([(budget_item_structure.to_search_field.name,'=',str(position))])
                 print(">>>>>>>>>> CODIGOS <<<<<<<<<<",x,position,search_budget_item.name,search_budget_item.expense_account.name)
@@ -769,6 +684,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
                 asigned = 0
                 for y in structure:
                     position = x[y.position_from:y.position_to]
+                    pc = pc + position + ' '
                     if y.is_year == True:
                         year = position
                     if y.is_check_digit == True:
@@ -824,7 +740,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
                                 key_portfolio_id = search_model.id
                 print(asigned,autorized,year)
                 vars = {
-                    'programmatic_account':x,
+                    'programmatic_account':pc,
                     'subdependence_id':subdependence_id,
                     'program_id':program_id,
                     'subprogram_id':subprogram_id,
@@ -851,7 +767,10 @@ class InvalidDataTXT(models.Model):#tabla para crear los registros del txt incor
     _name = 'invalid.row'
 
     crossovered_budget_id = fields.Many2one('crossovered.budget',ondelete="cascade")
-    code = fields.Char(string='Codido programático')
+    budget_amount_allocated_id = fields.Many2one('budget.amount.allocated', ondelete='cascade')
+    budget_adjustement_id = fields.Many2one('budget.adjustement', ondelete='cascade')
+    budget_import_recalendarization_id = fields.Many2one('budget.import.recalendarization', ondelete='cascade')
+    code = fields.Text(string='Codido programático')
     description = fields.Char(string="Descripción")
 
 
@@ -876,7 +795,7 @@ class InheritCrossoveredBudgetLine(models.Model):# modelo en el cual se hace un 
     amount_applied = fields.Float(string="Ejercido",digits=(12,2))
     amount_modified = fields.Float(string="Modificado",digits=(12,2))
     amount_available2 = fields.Float(string="Disponible",digits=(12,2))
-    programmatic_account = fields.Char(string="Código programático")#El valor debe estar separado por (.) por cada segmento del código programático
+    programmatic_account = fields.Text(string="Código programático")#El valor debe estar separado por (.) por cada segmento del código programático
     # branch_id = fields.Many2one('branch',string="Dependencia")
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdependencia")
     program_id = fields.Many2one('budget.program',string="Programa")
@@ -898,22 +817,238 @@ class BudgetAmountAllocated(models.Model):# modelo para Control de montos asigna
     date_import = fields.Date(string="Fecha de importación",required=True)
     file_amount_allocated  = fields.Binary(string="Archivo estacionalidad",required=True)
     user_id = fields.Many2one('res.users',string="Realizado por",required=True)
-    state = fields.Selection([('draft', 'Borrador'),('approve','Aprovado'),('solicitud','Solicitud'),('reject','Rechazado'),('cancel','Cancelado')], default="draft")
+    state = fields.Selection([('draft', 'Borrador'),('solicitud','Solicitud'),('approve','Aprobado'),('reject','Rechazado'),('cancel','Cancelado')], default="draft")
     reason_for_rejection = fields.Char(string="Motivo del rechazo")
-    deposit_control = fields.One2many('deposit.control.table', 'budget_amount_allocated_id')
+    budget_amount_allocated_line_ids = fields.One2many('budget.amount.allocated.lines', 'allocated_deposit_id')
 
-class DepositControlTable(models.Model):#tabla control de montos 
-    _name = 'deposit.control.table'
-
-    budget_amount_allocated_id = fields.Many2one('budget.amount.allocated', ondelete="cascade")
     currency_id = fields.Many2one('res.currency', string='Currency')
     assigment_amount = fields.Monetary(string="Monto asignado",digits=(12,2),required=True)
     deposit_amount = fields.Monetary(string="Monto depositado",required=True,readonly=True)
     pending_amount = fields.Monetary(string="Monto pendiente",digits=(12,2),readonly=True)
     deposit_date = fields.Date(string="Fecha depósito")
     deposit_account_bank_id = fields.Many2one('account.journal',string="Cuenta del depósito")
-    Comments = fields.Char(string="Observaciones")
+    comments = fields.Text(string="Observaciones")
     move_id = fields.Many2one('account.move',string="Asiento contable")
+
+    filename = fields.Char()
+    invalid_rows = fields.One2many('invalid.row','budget_amount_allocated_id')
+    record_numbers = fields.Integer(string="Número de registros",readonly=True)
+    imported_registration_numbers = fields.Integer(string="Número de registros importados",readonly=True)
+    correct_import = fields.Boolean(
+        string='Importación Correcta?',
+        default=False
+    )
+
+    @api.onchange('filename')
+    def onchange_file(self):
+        self.invalid_rows = [(5, 0, 0)]
+        if self.filename:
+            ext = str(self.filename.split('.')[1])
+            if ext != 'txt':
+                raise ValidationError('El archivo adjunto no es compatible para la importación')
+        else:
+            self.record_numbers = 0 
+            self.imported_registration_numbers = 0            
+
+    def function_request(self):
+        self.state = 'solicitud'
+
+    def function_approve(self):
+        self.create_account_move_unam()
+        self.state = 'approve'
+
+    def function_reject(self):
+        self.state = 'reject'
+
+    def function_cancel(self):
+        self.state = 'cancel'
+
+    def function_draft(self):
+        self.state = 'draft'
+
+
+    def create_account_move_unam(self):
+        vals = {
+            'ref':'CMA0'+self.code
+        }
+        move = self.env['account.move'].create(vals)
+        for x in self.budget_amount_allocated_line_ids:
+            v1 = {
+                'move_id':move.id,
+                'account_id':x.item_id.expense_account.id,
+                'name':str(x.item_id.expense_account.code)+' Ley de ingresos por ejecutar',
+                'debit':x.amount,
+                'account_internal_type':'other',
+                'programmatic_code':x.programmatic_code
+                }
+            v2 = {
+                'move_id':move.id,
+                'account_id':x.item_id.debtor_account.id,
+                'name':str(x.item_id.debtor_account.code)+' Ley de ingresos estimada',
+                'credit':x.amount,
+                'account_internal_type':'receivable',
+                'programmatic_code':x.programmatic_code
+                }
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v1)
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v2)
+        self.move_id = move.id
+
+    def read_file(self):
+        self.invalid_rows = [(5, 0, 0)]
+        if self.file_amount_allocated:
+            data = base64.decodestring(self.file_amount_allocated)
+            fobj = tempfile.NamedTemporaryFile(delete=False)
+            fname = fobj.name
+            fobj.write(data)
+            fobj.close()
+            file = open(fname,"r")
+            structure = self.env['budget.structure'].search([('code_part_pro','=',True)])
+            count_valid = 0
+            tot_reg = 0
+            message = " ERRORES: "
+            valid = True
+            number_line = 0
+            for x in file:
+                pc = ''
+                number_line += 1
+                for y in structure:
+                    position = x[y.position_from:y.position_to]
+                    if y.catalog_id.model:
+                        search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                        if not search_model:
+                            valid = False
+                            message += ' Código invalido en el modelo '+ y.catalog_id.name + '. \n'
+                    pc += position + ' '
+                if valid == True:
+                    count_valid += 1
+                else:
+                    self.invalid_rows.create({
+                        'code':pc,
+                        'description':'Linea '+ str(number_line) +message, 
+                        'budget_amount_allocated_id': self.id,
+                    })
+                tot_reg += 1
+            self.record_numbers = tot_reg
+            self.imported_registration_numbers = count_valid
+            self.create_budget_allocated_lines_from_file()
+                    # except:
+                    #     print('ERROR AL EJECUTAR create_budget_allocated_lines_from_file()')
+        else:
+            self.record_numbers = 0
+            self.imported_registration_numbers = 0
+
+    def create_budget_allocated_lines_from_file(self):
+        if self.file_amount_allocated:
+            if self.record_numbers == self.imported_registration_numbers:
+                data = base64.decodestring(self.file_amount_allocated)
+                fobj = tempfile.NamedTemporaryFile(delete=False)
+                fname = fobj.name
+                fobj.write(data)
+                fobj.close()
+                file = open(fname,"r")
+                structure = self.env['budget.structure'].search([('code_part_pro','=',True)])
+                account_budget_post = False
+                for x in file:
+                    programmatic_code = ''
+                    amount = ''
+                    date = datetime.now()
+                    subdependence_id = ''
+                    program_id = ''
+                    subprogram_id = ''
+                    item_id = ''
+                    resource_origin_id = ''
+                    institutional_activity_id = ''
+                    conpp_id = ''
+                    conpa_id = ''
+                    expense_type_id = ''
+                    geographic_location_id = ''
+                    key_portfolio_id = ''
+                    for y in structure:
+                        position = x[y.position_from:y.position_to]
+                        programmatic_code += str(position + ' ')
+                        if y.is_authorized_budget == True:
+                            amount = position
+                        if y.catalog_id.model:
+                            if y.catalog_id.model == 'budget.subdependence':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    subdependence_id = search_model.id
+                            if y.catalog_id.model == 'budget.program':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    program_id = search_model.id
+                            if y.catalog_id.model == 'budget.subprogram':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    subprogram_id = search_model.id
+                            if y.catalog_id.model == 'budget.item':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    item_id = search_model.id
+                            if y.catalog_id.model == 'budget.resource.origin':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    resource_origin_id = search_model.id
+                            if y.catalog_id.model == 'budget.institutional.activity':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    institutional_activity_id = search_model.id
+                            if y.catalog_id.model == 'budget.program.conversion':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    conpp_id = search_model.id
+                            if y.catalog_id.model == 'budget.item.conversion':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    conpa_id = search_model.id
+                            if y.catalog_id.model == 'budget.expense.type':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    expense_type_id = search_model.id
+                            if y.catalog_id.model == 'budget.geographic.location':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    geographic_location_id = search_model.id
+                            if y.catalog_id.model == 'budget.key.portfolio':
+                                search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                                if search_model:
+                                    key_portfolio_id = search_model.id
+                    vars = {
+                        'allocated_deposit_id':self.id,
+                        'programmatic_code':programmatic_code,
+                        'amount':amount,
+                        'date':date,
+                        'subdependence_id':subdependence_id,
+                        'program_id':program_id,
+                        'subprogram_id':subprogram_id,
+                        'item_id':item_id,
+                        'resource_origin_id':resource_origin_id,
+                        'institutional_activity_id':institutional_activity_id,
+                        'conpp_id':conpp_id,
+                        'conpa_id':conpa_id,
+                        'expense_type_id':expense_type_id,
+                        'geographic_location_id':geographic_location_id,
+                        'key_portfolio_id':key_portfolio_id,
+                    }
+                    print(vars)
+                    budget_amount_allocated_line = self.env['budget.amount.allocated.lines'].create(vars)
+                self.correct_import = True
+
+
+
+
+# class DepositControlTable(models.Model):#tabla control de montos 
+#     _name = 'deposit.control.table'
+
+#     budget_amount_allocated_id = fields.Many2one('budget.amount.allocated', ondelete="cascade")
+#     currency_id = fields.Many2one('res.currency', string='Currency')
+#     assigment_amount = fields.Monetary(string="Monto asignado",digits=(12,2),required=True)
+#     deposit_amount = fields.Monetary(string="Monto depositado",required=True,readonly=True)
+#     pending_amount = fields.Monetary(string="Monto pendiente",digits=(12,2),readonly=True)
+#     deposit_date = fields.Date(string="Fecha depósito")
+#     deposit_account_bank_id = fields.Many2one('account.journal',string="Cuenta del depósito")
+#     comments = fields.Char(string="Observaciones")
+#     move_id = fields.Many2one('account.move',string="Asiento contable")
 
 class BudgetAmountAllocatedLines(models.Model): #parte del modelo budget.amount.allocated.lines que esta  Control de montos asignados pag 24 doc
     _name = 'budget.amount.allocated.lines'
@@ -934,7 +1069,7 @@ class BudgetAmountAllocatedLines(models.Model): #parte del modelo budget.amount.
     conpa_id = fields.Many2one('budget.item.conversion',string="Conversión con partida")
     expense_type_id = fields.Many2one('budget.expense.type',string="Tipo de gasto")
     geographic_location_id = fields.Many2one('budget.geographic.location',string="Ubicación geográfica")
-    key_portfolio_id = fields.Many2one('budget_key_portfolio',string="Clave cartera")
+    key_portfolio_id = fields.Many2one('budget.key.portfolio',string="Clave cartera")
 
 class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
     _name='budget.adjustement'
@@ -947,13 +1082,212 @@ class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
     reason_for_rejection = fields.Char(string="Motivo del rechazo")
     move_id = fields.Many2one('account.move',string="Asiento contable")
     budget_adjustement_line= fields.One2many('budget.adjustement.lines','adjustement_id')
+    filename = fields.Char()
+    invalid_rows = fields.One2many('invalid.row','budget_adjustement_id')
+    record_numbers = fields.Integer(string="Número de registros",readonly=True)
+    imported_registration_numbers = fields.Integer(string="Número de registros importados",readonly=True)
+    correct_import = fields.Boolean(
+        string='Importación Correcta?',
+        default=False
+    )
+
+    @api.onchange('filename')
+    def onchange_file(self):
+        self.invalid_rows = [(5, 0, 0)]
+        if self.filename:
+            ext = str(self.filename.split('.')[1])
+            if ext != 'txt':
+                raise ValidationError('El archivo adjunto no es compatible para la importación')
+        else:
+            self.record_numbers = 0 
+            self.imported_registration_numbers = 0            
+
+    def function_request(self):
+        self.state = 'solicitud'
+
+    def function_approve(self):
+        self.create_account_move_unam()
+        self.state = 'approve'
+
+    def function_reject(self):
+        self.state = 'reject'
+
+    def function_cancel(self):
+        self.state = 'cancel'
+
+    def function_draft(self):
+        self.state = 'draft'
+
+    def create_account_move_unam(self):
+        vals = {
+            'ref':'ADE0'+self.code
+        }
+        move = self.env['account.move'].create(vals)
+        for x in self.budget_adjustement_line:
+            v1 = {
+                'move_id':move.id,
+                'account_id':x.item_id.expense_account.id,
+                'name':str(x.item_id.expense_account.code)+' Ley de ingresos por ejecutar',
+                'debit':x.amount,
+                'account_internal_type':'other',
+                'programmatic_code':x.programmatic_code
+                }
+            v2 = {
+                'move_id':move.id,
+                'account_id':x.item_id.debtor_account.id,
+                'name':str(x.item_id.debtor_account.code)+' Ley de ingresos estimada',
+                'credit':x.amount,
+                'account_internal_type':'receivable',
+                'programmatic_code':x.programmatic_code
+                }
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v1)
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v2)
+        self.move_id = move.id
+
+    def read_file(self):
+        self.invalid_rows = [(5, 0, 0)]
+        if self.file:
+            data = base64.decodestring(self.file)
+            fobj = tempfile.NamedTemporaryFile(delete=False)
+            fname = fobj.name
+            fobj.write(data)
+            fobj.close()
+            file = open(fname,"r")
+            structure = self.env['budget.structure'].search([('code_part_pro','=',True)])
+            count_valid = 0
+            tot_reg = 0
+            message = " ERRORES: "
+            valid = True
+            number_line = 0
+            for x in file:
+                pc = ''
+                number_line += 1
+                for y in structure:
+                    position = x[y.position_from:y.position_to]
+                    if y.catalog_id.model:
+                        search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                        if not search_model:
+                            valid = False
+                            message += ' Código invalido en el modelo '+ y.catalog_id.name + '. \n'
+                    pc += position + ' '
+                if valid == True:
+                    count_valid += 1
+                else:
+                    self.invalid_rows.create({
+                        'code':pc,
+                        'description':'Linea '+ str(number_line) +message, 
+                        'budget_adjustement_id': self.id,
+                    })
+                tot_reg += 1
+            self.record_numbers = tot_reg
+            self.imported_registration_numbers = count_valid
+            if count_valid == tot_reg:
+                self.create_budget_adjustment_lines_from_file()
+        else:
+            self.record_numbers = 0
+            self.imported_registration_numbers = 0
+
+    def create_budget_adjustment_lines_from_file(self):
+        if self.file and (self.record_numbers == self.imported_registration_numbers):
+            data = base64.decodestring(self.file)
+            fobj = tempfile.NamedTemporaryFile(delete=False)
+            fname = fobj.name
+            fobj.write(data)
+            fobj.close()
+            file = open(fname,"r")
+            structure = self.env['budget.structure'].search([('code_part_pro','=',True)])
+            account_budget_post = False
+            for x in file:
+                programmatic_code = ''
+                amount = ''
+                subdependence_id = ''
+                program_id = ''
+                subprogram_id = ''
+                item_id = ''
+                resource_origin_id = ''
+                institutional_activity_id = ''
+                conpp_id = ''
+                conpa_id = ''
+                expense_type_id = ''
+                geographic_location_id = ''
+                key_portfolio_id = ''
+                for y in structure:
+                    position = x[y.position_from:y.position_to]
+                    programmatic_code += str(position + ' ')
+                    if y.is_authorized_budget == True:
+                        amount = position
+                    if y.catalog_id.model:
+                        if y.catalog_id.model == 'budget.subdependence':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                subdependence_id = search_model.id
+                        if y.catalog_id.model == 'budget.program':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                program_id = search_model.id
+                        if y.catalog_id.model == 'budget.subprogram':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                subprogram_id = search_model.id
+                        if y.catalog_id.model == 'budget.item':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                item_id = search_model.id
+                        if y.catalog_id.model == 'budget.resource.origin':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                resource_origin_id = search_model.id
+                        if y.catalog_id.model == 'budget.institutional.activity':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                institutional_activity_id = search_model.id
+                        if y.catalog_id.model == 'budget.program.conversion':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                conpp_id = search_model.id
+                        if y.catalog_id.model == 'budget.item.conversion':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                conpa_id = search_model.id
+                        if y.catalog_id.model == 'budget.expense.type':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                expense_type_id = search_model.id
+                        if y.catalog_id.model == 'budget.geographic.location':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                geographic_location_id = search_model.id
+                        if y.catalog_id.model == 'budget.key.portfolio':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                key_portfolio_id = search_model.id
+                vars = {
+                    'adjustement_id':self.id,
+                    'programmatic_code':programmatic_code,
+                    'amount':amount,
+                    'subdependence_id':subdependence_id,
+                    'program_id':program_id,
+                    'subprogram_id':subprogram_id,
+                    'item_id':item_id,
+                    'resource_origin_id':resource_origin_id,
+                    'institutional_activity_id':institutional_activity_id,
+                    'conpp_id':conpp_id,
+                    'conpa_id':conpa_id,
+                    'expense_type_id':expense_type_id,
+                    'geographic_location_id':geographic_location_id,
+                    'key_portfolio_id':key_portfolio_id,
+                    'type':'a'
+                }
+                print(vars)
+                budget_adjustement_line = self.env['budget.adjustement.lines'].create(vars)
+            self.correct_import = True
     
 class BudgetAdjustementLines(models.Model):#modelo el cual se muestra en una pestaña con el nombre líneas de adecuación relacionada al budegte adjustement
     _name ='budget.adjustement.lines'
 
     adjustement_id = fields.Many2one('budget.adjustement',string="Adecuación",required=True)
     programmatic_code = fields.Char(string="Código programático",required=True)
-    type = fields.Selection([('a','Aumento'),('d','Disminución')],string="Tipo",required=True)
+    type = fields.Selection([('a','Aumento'),('d','Disminución')],string="Tipo",required=True, default='a')
     amount = fields.Float(string="Importe",required=True)
     #branch_id = fields.Many2one('res.branch',string="Dependencia",required=True)
     subdependence_id = fields.Many2one('budget.subdependence',string="Subdepencencia",required=True)
@@ -972,6 +1306,7 @@ class BudgetImportRecalendarization(models.Model):#modelo para Recalendarizacion
     _name = 'budget.import.recalendarization'
 
     code = fields.Char(string="Folio",required=True)
+    budget_rescheduling_lines = fields.One2many('budget.rescheduling','import_recalendarization_id',string="Recalendarizaciones")
     budget_id = fields.Many2one('crossovered.budget',string="Presupuesto",required=True)
     file = fields.Binary(string="Archivo recalendarización",required=True)
     description = fields.Char(string="Observaciones")
@@ -979,11 +1314,187 @@ class BudgetImportRecalendarization(models.Model):#modelo para Recalendarizacion
     records_number_imported = fields.Integer(string="Número de registros importados",default=0,readonly=True)
     state = fields.Selection([('draft','Borrador'),('import','Importado'),('reject','Rechazado'),('cancel','Cancelado')],default="draft")
     reason_for_rejection = fields.Char(string="Motivo del rechazo")
+    filename = fields.Char()
+    invalid_rows = fields.One2many('invalid.row','budget_import_recalendarization_id')
+    correct_import = fields.Boolean(
+        string='Importación Correcta?',
+        default=False
+    )
+
+    @api.onchange('filename')
+    def onchange_file(self):
+        self.invalid_rows = [(5, 0, 0)]
+        if self.filename:
+            ext = str(self.filename.split('.')[1])
+            if ext != 'txt':
+                raise ValidationError('El archivo adjunto no es compatible para la importación')
+        else:
+            self.record_number = 0 
+            self.records_number_imported = 0            
+
+    def function_import(self):
+        self.state = 'import'
+
+    def function_reject(self):
+        self.state = 'reject'
+
+    def function_cancel(self):
+        self.state = 'cancel'
+
+    def function_draft(self):
+        self.state = 'draft'
+
+
+    def read_file(self):
+        self.invalid_rows = [(5, 0, 0)]
+        if self.file:
+            data = base64.decodestring(self.file)
+            fobj = tempfile.NamedTemporaryFile(delete=False)
+            fname = fobj.name
+            fobj.write(data)
+            fobj.close()
+            file = open(fname,"r")
+            structure = self.env['budget.structure.recalendarization'].search([('code_part_pro','=',True)])
+            count_valid = 0
+            tot_reg = 0
+            message = " ERRORES: "
+            valid = True
+            number_line = 0
+            for x in file:
+                pc = ''
+                number_line += 1
+                for y in structure:
+                    position = x[y.position_from:y.position_to]
+                    if y.catalog_id.model:
+                        search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                        if not search_model:
+                            valid = False
+                            message += ' Código invalido en el modelo '+ y.catalog_id.name + '. \n'
+                    pc += position + ' '
+                if valid == True:
+                    count_valid += 1
+                else:
+                    self.invalid_rows.create({
+                        'code':pc,
+                        'description':'Linea '+ str(number_line) +message, 
+                        'budget_import_recalendarization_id': self.id,
+                    })
+                tot_reg += 1
+            self.record_number = tot_reg
+            self.records_number_imported = count_valid
+            if count_valid == tot_reg:
+                self.create_budget_rescheduling_from_file()
+        else:
+            self.record_number = 0
+            self.records_number_imported = 0
+
+    def create_budget_rescheduling_from_file(self):
+        if self.file and (self.record_number == self.records_number_imported):
+            data = base64.decodestring(self.file)
+            fobj = tempfile.NamedTemporaryFile(delete=False)
+            fname = fobj.name
+            fobj.write(data)
+            fobj.close()
+            file = open(fname,"r")
+            structure = self.env['budget.structure.recalendarization'].search([('code_part_pro','=',True)])
+            account_budget_post = False
+            for x in file:
+                programmatic_code = ''
+                subdependence_id = ''
+                program_id = ''
+                subprogram_id = ''
+                item_id = ''
+                resource_origin_id = ''
+                institutional_activity_id = ''
+                conpp_id = ''
+                conpa_id = ''
+                expense_type_id = ''
+                geographic_location_id = ''
+                key_portfolio_id = ''
+                folio = '/'
+                fecha = ''
+                for y in structure:
+                    position = x[y.position_from:y.position_to]
+                    programmatic_code += str(position + ' ')
+                    if y.is_amount == True:
+                        amount = position
+                    if y.is_number_doc == True:
+                        folio = position
+                    if y.is_date_doc == True:
+                        fecha = date(int('20'+position[4:6]),int(position[2:4]),int(position[0:2]))
+                    if y.catalog_id.model:
+                        if y.catalog_id.model == 'budget.subdependence':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                subdependence_id = search_model.id
+                        if y.catalog_id.model == 'budget.program':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                program_id = search_model.id
+                        if y.catalog_id.model == 'budget.subprogram':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                subprogram_id = search_model.id
+                        if y.catalog_id.model == 'budget.item':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                item_id = search_model.id
+                        if y.catalog_id.model == 'budget.resource.origin':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                resource_origin_id = search_model.id
+                        if y.catalog_id.model == 'budget.institutional.activity':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                institutional_activity_id = search_model.id
+                        if y.catalog_id.model == 'budget.program.conversion':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                conpp_id = search_model.id
+                        if y.catalog_id.model == 'budget.item.conversion':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                conpa_id = search_model.id
+                        if y.catalog_id.model == 'budget.expense.type':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                expense_type_id = search_model.id
+                        if y.catalog_id.model == 'budget.geographic.location':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                geographic_location_id = search_model.id
+                        if y.catalog_id.model == 'budget.key.portfolio':
+                            search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
+                            if search_model:
+                                key_portfolio_id = search_model.id
+                vars = {
+                    'programmatic_code':programmatic_code,
+                    'subdependence_id':subdependence_id,
+                    'program_id':program_id,
+                    'subprogram_id':subprogram_id,
+                    'item_id':item_id,
+                    'resource_origin_id':resource_origin_id,
+                    'institutional_activity_id':institutional_activity_id,
+                    'conpp_id':conpp_id,
+                    'conpa_id':conpa_id,
+                    'expense_type_id':expense_type_id,
+                    'geographic_location_id':geographic_location_id,
+                    'key_portfolio_id':key_portfolio_id,
+                    'date':fecha,
+                    'to_period':'t1',
+                    'import_recalendarization_id':self.id,
+                    'budget_id':self.budget_id.id,
+                    'code': folio
+                }
+                print(vars)
+                #budget_rescheduling_line = self.env['budget.rescheduling'].create(vars)
+            #self.correct_import = True
 
 class BudgetRescheduling(models.Model):# modelo para Control de recalendarizaciones. pag35
     _name = 'budget.rescheduling'
 
-    code = fields.Char(string="Folio",required=True)
+    code = fields.Char(string="Folio",required=True, default="/")
+    amount = fields.Float(string='Monto')
     budget_id = fields.Many2one('crossovered.budget',string="Presupuesto",readonly=True)
     programmatic_code = fields.Char(string="Código programático",required=True)
     date = fields.Date(string="Fecha",default=fields.Date.today(),required=True)
@@ -1004,6 +1515,32 @@ class BudgetRescheduling(models.Model):# modelo para Control de recalendarizacio
     geographic_location_id = fields.Many2one('budget.geographic.location',string="Ubicación geográfica",required=True)
     key_portfolio_id = fields.Many2one('budget.key.portfolio',string="Clave cartera",required=True)
     move_id = fields.Many2one('account.move',string="Asiento contable")
+
+    def create_account_move_unam(self):
+        vals = {
+            'ref':'BRE0'+self.code
+        }
+        move = self.env['account.move'].create(vals)
+        for x in self:
+            v1 = {
+                'move_id':move.id,
+                'account_id':x.item_id.expense_account.id,
+                'name':str(x.item_id.expense_account.code)+' Ley de ingresos por ejecutar',
+                'debit':0.0,
+                'account_internal_type':'other',
+                'programmatic_code':x.programmatic_code
+                }
+            v2 = {
+                'move_id':move.id,
+                'account_id':x.item_id.debtor_account.id,
+                'name':str(x.item_id.debtor_account.code)+' Ley de ingresos estimada',
+                'credit':0.0,
+                'account_internal_type':'receivable',
+                'programmatic_code':x.programmatic_code
+                }
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v1)
+            self.env['account.move.line'].with_context(check_move_validity=False).create(v2)
+        self.move_id = move.id
 
 class InheritAccountMoveLine(models.Model):#campos adicionales a este modelo Validación del presupuesto, solicitudes de pago.
     _inherit = 'account.move.line'
