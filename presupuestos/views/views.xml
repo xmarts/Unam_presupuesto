@@ -690,60 +690,6 @@
     view_mode="tree,form"
     />
 
-  <!--vista y formulario para  budget.structure Orden del código programático. -->
-
-  <record  id="view_form_Orden_codigo_pro" model="ir.ui.view">
-    <field name="name">Orden del código programático</field>
-    <field name="model">budget.structure</field>
-    <field name="arch" type="xml">
-      <form >
-        <header>
-        </header>     
-         <sheet>
-            <group>
-              <group>
-                <field name="sequence"/>
-                <field name="name"/>
-                <field name="is_year" attrs="{'readonly':['|','|',('is_check_digit','=',True),('is_authorized_budget','=',True),('is_asigned_budget','=',True)]}"/>
-                <field name="is_check_digit" attrs="{'readonly':['|','|',('is_year','=',True),('is_authorized_budget','=',True),('is_asigned_budget','=',True)]}" />
-                <field name="is_authorized_budget" attrs="{'readonly':['|','|',('is_check_digit','=',True),('is_year','=',True),('is_asigned_budget','=',True)]}"/>
-                <field name="is_asigned_budget" attrs="{'readonly':['|','|',('is_check_digit','=',True),('is_year','=',True),('is_authorized_budget','=',True)]}"/>
-              </group>
-              <group> 
-                <field name="catalog_id" attrs="{'invisible':['|','|','|',('is_year','=',True),('is_check_digit','=',True),('is_authorized_budget','=',True),('is_asigned_budget','=',True)]}" options="{'no_create': True, 'no_create_edit':True}"/>
-                <field name="to_search_field" attrs="{'invisible':['|','|','|',('is_year','=',True),('is_check_digit','=',True),('is_authorized_budget','=',True),('is_asigned_budget','=',True)]}" domain="[('model_id', '=', catalog_id)]" options="{'no_create': True, 'no_create_edit':True}"/>
-                <field name="position_from"/>
-                <field name="position_to"/>
-                <field name="code_part_pro"/>
-              </group>
-            </group>
-         </sheet> 
-      </form>
-    </field> 
-  </record> 
-
-  <record id="view_tree_Orden_codigo_pro" model="ir.ui.view">
-    <field name="name">Orden del código programático tree</field>
-    <field name="model">budget.structure</field>
-    <field name="arch" type="xml">
-        <tree >
-          <field name="sequence"/>
-          <field name="name"/>
-          <field name="catalog_id"/>
-          <field name="position_from"/>
-          <field name="position_to"/> 
-          <field name="code_part_pro"/>               
-        </tree>
-    </field>
-  </record> 
-
-  <act_window
-    id="action_Orden_codigo_pro"
-    name="Orden del código programático"
-    res_model="budget.structure"
-    view_mode="tree,form"
-    />
-
   <!--vista y formularios Control de montos asignados budget.amount.allocated.--> 
   <record  id="view_form_control_montos_asig" model="ir.ui.view">
     <field name="name">Control de montos asignados</field>
@@ -751,10 +697,12 @@
     <field name="arch" type="xml">
       <form >
         <header>
-          <button name="function_name" states="draft" string="Importar" type="object" class="oe_highlight"/>
-          <button name="function_name" states="draft" string="Aprobar" type="object" class="oe_highlight"/>
-          <button name="function_name" states="draft" string="Rechazar" type="object" class="oe_highlight"/>
-          <button name="function_name" states="draft" string="Cancelar" type="object" class="oe_highlight"/>
+          <button name="read_file" string="Importar" attrs="{'invisible':[('correct_import' ,'=' ,True),('state','!=','draft')]}" type="object" class="oe_highlight"/>
+          <button name="function_request" states="draft" string="Solicitar" type="object" class="oe_highlight"/>
+          <button name="function_approve" states="solicitud" string="Aprobar" type="object" class="oe_highlight"/>
+          <button name="function_reject" states="draft,solicitud" string="Rechazar" type="object" class="oe_highlight"/>
+          <button name="function_cancel" states="draft,solicitud" string="Cancelar" type="object" class="oe_highlight"/>
+          <button name="function_draft" states="cancel" string="Borrador" type="object" class="oe_highlight"/>
            <field name="state" widget="statusbar"/>
         </header>     
          <sheet>
@@ -764,27 +712,67 @@
                 <field name="budget_id"/>
                 <field name="user_id"/>
                 <field name="date_import"/>
+                <field name="correct_import" invisible="0" />
               </group>
               <group>                
-                <field name="file_amount_allocated"/>
+                <field name="filename" invisible="1" />
+                <field name="file_amount_allocated" filename="filename"/>
                 <field name="reason_for_rejection"/>
-                <field name="description"/>                              
+                <field name="description"/>       
+                <field name="record_numbers"/>       
+                <field name="imported_registration_numbers"/>                              
               </group>
             </group>
             <notebook>
-              <page string="Control de depósitos ">
+              <page string="Control de depósitos">
                 <sheet>
-                  <field name="deposit_control">
+                <group>
+                  <group>
+                    <field name="currency_id" />
+                    <field name="assigment_amount" />
+                    <field name="deposit_amount" />
+                    <field name="pending_amount" />
+                    <field name="deposit_date" />
+                  </group>
+                  <group>
+                    <field name="deposit_account_bank_id" />
+                    <field name="comments" />
+                    <field name="move_id" />
+                  </group>
+                </group>
+              </sheet>
+              </page>
+              <page string="Lineas">
+                <sheet>
+                  <field name="budget_amount_allocated_line_ids">
                     <tree string="Tabla control" editable="bottom">
-                      <field name="assigment_amount"/>
-                      <field name="deposit_date"/>
-                      <field name="deposit_amount"/>
-                      <field name="deposit_account_bank_id"/>
-                      <field name="pending_amount"/>
-                      <field name="Comments"/>
-                      <field name="move_id"/>
-                      <field name="budget_amount_allocated_id" invisible="1" />                      
+                      <field name="allocated_deposit_id" invisible="1"/>
+                      <field name="programmatic_code"/>
+                      <field name="amount"/>
+                      <field name="date"/>
+                      <field name="subdependence_id" optional="show"/>
+                      <field name="program_id" optional="show"/>
+                      <field name="subprogram_id" optional="show"/>
+                      <field name="item_id" optional="show"/>
+                      <field name="resource_origin_id" optional="show"/>
+                      <field name="institutional_activity_id" optional="show"/>
+                      <field name="conpp_id" optional="show"/>
+                      <field name="conpa_id" optional="show"/>
+                      <field name="expense_type_id" optional="show"/>
+                      <field name="geographic_location_id" optional="show"/>
+                      <field name="key_portfolio_id" optional="show"/>                      
                     </tree>                    
+                  </field>                                 
+                </sheet>
+              </page>
+              <page string="Invalidos">
+                <sheet>
+                  <field name="invalid_rows">    
+                    <tree string="Incorrectos" editable="bottom">
+                      <field name="code"/>
+                      <field name="description"/>
+                      <field name="crossovered_budget_id" invisible="1"/>
+                     </tree>             
                   </field>                                 
                 </sheet>
               </page>
@@ -886,17 +874,19 @@
     <field name="arch" type="xml">
       <form >
         <header>
-          <button name="function_name" states="draft" string="Importar" type="object" class="oe_highlight"/>
-          <button name="function_name" states="draft" string="Aprobar" type="object" class="oe_highlight"/>
-          <button name="function_name" states="draft" string="Rechazar" type="object" class="oe_highlight"/>
-          <button name="function_name" states="draft" string="Cancelar" type="object" class="oe_highlight"/>
-           <field name="state" widget="statusbar"/>     
+          <button name="read_file" string="Importar" attrs="{'invisible':[('correct_import' ,'=' ,True),('state','!=','draft')]}" type="object" class="oe_highlight"/>
+          <button name="function_request" states="draft" string="Solicitar" type="object" class="oe_highlight"/>
+          <button name="function_approve" states="solicitud" string="Aprobar" type="object" class="oe_highlight"/>
+          <button name="function_reject" states="draft,solicitud" string="Rechazar" type="object" class="oe_highlight"/>
+          <button name="function_cancel" states="draft,solicitud" string="Cancelar" type="object" class="oe_highlight"/>
+          <button name="function_draft" states="cancel" string="Borrador" type="object" class="oe_highlight"/>
+           <field name="state" widget="statusbar"/>    
         </header>     
          <sheet>
             <group>
               <group>
               <field name="code"/>
-              <field name="file"/>
+              <field name="file" filename='filename'/>
               <field name="budget_id"/>
               <field name="move_id"/>
               </group>
@@ -904,11 +894,14 @@
                 <field name="movement_date"/>
                 <field name="reason_for_rejection"/>                        
                 <field name="description"/>
+                <field name="correct_import" invisible="0" />
+                <field name="filename" invisible="1" />
+                <field name="record_numbers"/>       
+                <field name="imported_registration_numbers"/>
               </group>
             </group>
             <notebook>
               <page string="líneas de adecuación">
-                <sheet>
                   <field name="budget_adjustement_line">
                     <tree string="Adecuacion" editable="bottom">
                       <field name="programmatic_code"/>
@@ -916,19 +909,30 @@
                       <field name="type"/>
                       <field name="amount"/>
                      <!-- <field name="branch_id"/>-->
-                      <field name="subdependence_id"/>
-                      <field name="program_id"/>
-                      <field name="subprogram_id"/>
-                      <field name="item_id"/>
-                      <field name="resource_origin_id"/>
-                      <field name="institutional_activity_id"/>
-                      <field name="conpp_id"/>
-                      <field name="conpa_id"/>
-                      <field name="expense_type_id"/>
-                      <field name="geographic_location_id"/>
-                      <field name="key_portfolio_id"/>
+                      <field name="subdependence_id" optional="show"/>
+                      <field name="program_id" optional="show"/>
+                      <field name="subprogram_id" optional="show"/>
+                      <field name="item_id" optional="show"/>
+                      <field name="resource_origin_id" optional="show"/>
+                      <field name="institutional_activity_id" optional="show"/>
+                      <field name="conpp_id" optional="show"/>
+                      <field name="conpa_id" optional="show"/>
+                      <field name="expense_type_id" optional="show"/>
+                      <field name="geographic_location_id" optional="show"/>
+                      <field name="key_portfolio_id" optional="show"/>
                      </tree> 
                   </field>  
+              </page>
+              
+              <page string="Invalidos">
+                <sheet>
+                  <field name="invalid_rows">    
+                    <tree string="Incorrectos" editable="bottom">
+                      <field name="code"/>
+                      <field name="description"/>
+                      <field name="budget_adjustement_id" invisible="1"/>
+                     </tree>             
+                  </field>                                 
                 </sheet>
               </page>
             </notebook>
@@ -967,17 +971,18 @@
     <field name="arch" type="xml">
       <form >
         <header>          
-          <button name="function_name" states="draft" string="Importar" type="object" class="oe_highlight"/>
-          <button name="function_name" states="draft" string="Aprobar" type="object" class="oe_highlight"/>
-          <button name="function_name" states="draft" string="Rechazar" type="object" class="oe_highlight"/>
-          <button name="function_name" states="draft" string="Cancelar" type="object" class="oe_highlight"/>
+          <button name="read_file" string="Importar" attrs="{'invisible':[('correct_import' ,'=' ,True),('state','!=','draft')]}" type="object" class="oe_highlight"/>
+          <button name="function_import" states="draft" string="Aprobar" type="object" class="oe_highlight"/>
+          <button name="function_reject" states="draft" string="Rechazar" type="object" class="oe_highlight"/>
+          <button name="function_cancel" states="draft" string="Cancelar" type="object" class="oe_highlight"/>
+          <button name="function_draft" states="cancel" string="Borrador" type="object" class="oe_highlight"/>
            <field name="state" widget="statusbar"/>  
         </header>     
          <sheet>
             <group>
               <group> 
                 <field name="code"/>
-                <field name="file"/>
+                <field name="file" filename="filename"/>
                 <field name="budget_id"/>
                 <field name="record_number"/>
               </group>
@@ -985,8 +990,50 @@
                 <field name="records_number_imported"/>
                 <field name="reason_for_rejection"/>
                 <field name="description"/>
+                <field name="correct_import"/>
+                <field name="filename" invisible="1"/>
               </group>
             </group>
+            <notebook>
+              <page string="Recalendarizaciones" >
+                <field name="budget_rescheduling_lines">
+                  <tree string="Lienas de recalendarizacion" editable="bottom">
+                    <field name="programmatic_code"/>
+                    <field name="code"/>
+                    <field name="budget_id" optional="show"/>
+                    <field name='amount' />
+                    <field name="date"/>
+                    <field name="to_period"/>
+                    <field name="state"/>
+                    <field name="reason_for_rejection" optional="show"/>
+                    <field name="import_recalendarization_id" invisible="1"/>
+                    <field name="subdependence_id" optional="show"/>
+                    <field name="program_id" optional="show"/>
+                    <field name="subprogram_id" optional="show"/>
+                    <field name="item_id" optional="show"/>
+                    <field name="resource_origin_id" optional="show"/>
+                    <field name="institutional_activity_id" optional="show"/>
+                    <field name="conpp_id" optional="show"/>
+                    <field name="conpa_id" optional="show"/>
+                    <field name="expense_type_id" optional="show"/>
+                    <field name="geographic_location_id" optional="show"/>
+                    <field name="key_portfolio_id" optional="show"/>
+                    <field name="move_id" />
+                  </tree>
+                </field>
+              </page>
+              <page string="Invalidos">
+                <sheet>
+                  <field name="invalid_rows">    
+                    <tree string="Incorrectos" editable="bottom">
+                      <field name="code"/>
+                      <field name="description"/>
+                      <field name="budget_import_recalendarization_id" invisible="1"/>
+                     </tree>             
+                  </field>                                 
+                </sheet>
+              </page>
+            </notebook>
          </sheet> 
       </form>
     </field> 
@@ -1040,6 +1087,7 @@
                 <field name="item_id"/>
               </group>
               <group>
+              <field name="amount"/>        
               <field name="date"/>                               
               <field name="resource_origin_id"/>
               <field name="institutional_activity_id"/>
@@ -1079,53 +1127,6 @@
     res_model="budget.rescheduling"
     view_mode="tree,form"
     />
-
-
-
-
-  <!--menus todos aki-->
-  <menuitem id="Programas_root" name="Presupuestos"/> 
-        <!--menut de control presupuesto y submenuts-->     
-
-  <menuitem id="id_menu_uno" name="Control de Presupuestos" parent="Programas_root" action=""/>
-   <menuitem id="id_menut_control_montos_asig" name="Control de Montos" parent="id_menu_uno" action="action_control_montos_asig" sequence="0"/>   
-   <menuitem id="id_menut_control_monto_dos" name="Control dos" parent="id_menu_uno" action="action_budget_am_all_lines" sequence="1"/>
-
-          <!--menut de modificaciones y submenut-->
-  <menuitem id="id_menu_dos" name="Modificaciones" parent="Programas_root" action=""/>
-  <menuitem id="id_menu_Adecuaciones" name="Adecuaciones" parent="id_menu_dos" action="action_adeudacion_id" sequence="0"/>
-
-  <menuitem id="id_menu_importar_reca" name="Importar recalendarizaciones" parent="id_menu_dos" action="action_archivo_recalendarizacion" sequence="1"/>
-
-  <menuitem id="id_menu_Reca_control" name="Recalendarizaciones" parent="id_menu_dos" action="action_control_recalendarizaciones" sequence="2"/>
-
-
-          <!--menut de informes-->
-  <menuitem id="id_menu_tres" name="Informes" parent="Programas_root" action="action_Programa"/>
-          <!--menut y submenut de configuraciones-->
-  <menuitem id="id_menu_cuatro" name="Configuración" parent="Programas_root" action=""/>
-  <menuitem id="id_menu_cuatro_2" name="Estructura programática" parent="id_menu_cuatro" action=""/>
-  <menuitem id="id_menu_programa" name="Programas" parent="id_menu_cuatro_2" action="action_Programa" sequence="0" />    
-  <menuitem id="id_menut_subprograma" name="Subprogrma" parent="id_menu_cuatro_2" action="action_subprogramas" sequence="1"/>
-  <menuitem id="id_menut_subdependencia" name="Subdependecia" parent="id_menu_cuatro_2" action="action_subdependencia" sequence="2"/>  
-  <menuitem id="id_menut_p_gastos" name="Partida gastos" parent="id_menu_cuatro_2" action="action_partida_gastos" sequence="3"/>
-  <menuitem id="id_menut_o_recurso " name="Origen de Recurso" parent="id_menu_cuatro_2" action="action_origen_recurso" sequence="4"/>
-  <menuitem id="id_menut_act_institu " name="Actividad Institucional" parent="id_menu_cuatro_2" action="action_act_institucional" sequence="5"/>  
-  <menuitem id="id_menut_c_p_p " name="Conversion de  Programa Presupuestario" parent="id_menu_cuatro_2" action="action_conversion_p_p" sequence="6"/>
-  <menuitem id="id_menut_conversion_p " name="Conversión con partida" parent="id_menu_cuatro_2" action="action_conversion_p" sequence="7"/>
-  <menuitem id="id_menut_tipo_g" name="Tipo de gasto" parent="id_menu_cuatro_2" action="action_tipos_de_gastos" sequence="8"/>
-  <menuitem id="id_menut_ubicacion_g" name="Ubicación Geográfica" parent="id_menu_cuatro_2" action="action_ubicacion_g" sequence="9"/>
-  <menuitem id="id_menut_clave_c" name="Clave cartera" parent="id_menu_cuatro_2" action="action_clave_c" sequence="10"/>
-  <menuitem id="id_menut_tipos_p" name="Tipos de proyecto" parent="id_menu_cuatro_2" action="action_tipos_p" sequence="11"/>
-  <menuitem id="id_menut_proyectos" name="Proyectos" parent="id_menu_cuatro_2" action="project.open_view_project_all" sequence="12"/>
-  <menuitem id="id_menut_etapas" name="Etapas" parent="id_menu_cuatro_2" action="action_etapas" sequence="13"/>
-  <menuitem id="id_menut_tipo_convenio" name="Tipos de convenio" parent="id_menu_cuatro_2" action="action_tipo_convenio" sequence="14"/>
-  <menuitem id="id_menut_convenio_nc" name="Convenio" parent="id_menu_cuatro_2" action="action_convenios_nc" sequence="15"/>
-  <menuitem id="id_menut_catalogo_gog" name="Catálogo COG CONAC" parent="id_menu_cuatro_2" action="action_catalogo_cog" sequence="16"/>
-  <menuitem id="id_menut_orden_codigo" name="Orden del código programático" parent="id_menu_cuatro_2" action="action_Orden_codigo_pro" sequence="17"/> 
-
-      
-
 
   <!--inherit al modelo de branch aqui empieza
   <record id="Dependencia_inherit_branch" model="ir.ui.view">
@@ -1214,7 +1215,7 @@
     <field name="inherit_id" ref="account_budget.crossovered_budget_view_form"/>
     <field name="arch" type="xml">
       <xpath expr="//button[@name='action_budget_confirm']" position="after">
-        <button name="read_file"   string="Importar presupuesto" type="object" class="oe_highlight" attrs="{'invisible':['|',('budget_of_project_dgpo' ,'=' ,False),('correct_import' ,'=' ,True)]}"/> 
+        <button name="read_file"   string="Importar presupuesto" type="object" class="oe_highlight" attrs="{'invisible':['|',('budget_of_project_dgpo' ,'=' ,False),('correct_import' ,'=' ,True)]}"/>
       </xpath>
 
      <!--despues del page-->
@@ -1269,15 +1270,15 @@
         <field name="programmatic_account"/>
       </xpath>
       <xpath expr="//field[@name='crossovered_budget_line']//tree//field[@name='is_above_budget']" position="after">
-          <field name="authorized_amount"/>
-          <field name="amount_allocate"/>
-          <field name="amount_available"/>
-          <field name="amount_modified"/>
-          <field name="amount_committed"/>
-          <field name="accrued_amount"/>
-          <field name="amount_applied"/>
-          <field name="amount_paid"/>
-          <field name="amount_available2"/>
+          <field name="authorized_amount" optional="show"/>
+          <field name="amount_allocate" optional="show"/>
+          <field name="amount_available" optional="show"/>
+          <field name="amount_modified" optional="show"/>
+          <field name="amount_committed" optional="show"/>
+          <field name="accrued_amount" optional="show"/>
+          <field name="amount_applied" optional="show"/>
+          <field name="amount_paid" optional="show"/>
+          <field name="amount_available2" optional="show"/>
 
       </xpath>
       <!--campos adicionales al formulario de crossovered_budget_line-->
@@ -1333,27 +1334,27 @@
             <group>
               
             <group >              
-            <field name="programmatic_code"/>
+            <field name="programmatic_code" optional="show"/>
             <!-- <field name="branch_id"/> -->
-            <field name="subdependence_id"/>
-            <field name="program_id"/>
-            <field name="subprogram_id"/>
+            <field name="subdependence_id" optional="show"/>
+            <field name="program_id" optional="show"/>
+            <field name="subprogram_id" optional="show"/>
             <field name="item_id"/>
-            <field name="check_digit_id"/>
-            <field name="resource_origin_id"/>
-            <field name="institutional_activity_id"/>
+            <field name="check_digit_id" optional="show"/>
+            <field name="resource_origin_id" optional="show"/>
+            <field name="institutional_activity_id" optional="show"/>
             <field name="conpp_id"/>
             </group>
             <group>
-              <field name="conpa_id"/>
-              <field name="expense_type_id"/>
-              <field name="geographic_location_id"/>
-              <field name="key_portfolio_id"/>
-              <field name="type_project_id"/>
-              <field name="project_number_id"/>
-              <field name="stage"/>
-              <field name="agreement_type_id"/>
-              <field name="agreement_number"/>
+              <field name="conpa_id" optional="show"/>
+              <field name="expense_type_id" optional="show"/>
+              <field name="geographic_location_id" optional="show"/>
+              <field name="key_portfolio_id" optional="show"/>
+              <field name="type_project_id" optional="show"/>
+              <field name="project_number_id" optional="show"/>
+              <field name="stage" optional="show"/>
+              <field name="agreement_type_id" optional="show"/>
+              <field name="agreement_number" optional="show"/>
             </group> 
 
             </group> 
