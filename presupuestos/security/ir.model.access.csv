@@ -15,9 +15,10 @@ access_budget_stage,budget.stage,model_budget_stage,,1,1,1,1
 access_budget_agreement_type,budget.agreement.type,model_budget_agreement_type,,1,1,1,1
 access_agreement_agreement,agreement.agreement,model_agreement_agreement,,1,1,1,1
 access_budget_cog_conac,budget.cog.conac,model_budget_cog_conac,,1,1,1,1
+access_budget_structure_rec,budget.structure.recalendarization,model_budget_structure_recalendarization,,1,1,1,1
 access_budget_structure,budget.structure,model_budget_structure,,1,1,1,1
+access_budget_structure_ade,budget.structure.adjustement,model_budget_structure_adjustement,,1,1,1,1
 access_budget_amount_allocated,budget.amount.allocated,model_budget_amount_allocated,,1,1,1,1
-access_deposit_control_table,deposit.control.table,model_deposit_control_table,,1,1,1,1
 access_budget_amount_allocated_lines,budget.amount.allocated.lines,model_budget_amount_allocated_lines,,1,1,1,1
 access_budget_adjustement,budget.adjustement,model_budget_adjustement,,1,1,1,1
 access_budget_adjustement_lines,budget.adjustement.lines,model_budget_adjustement_lines,,1,1,1,1
