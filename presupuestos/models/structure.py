@@ -325,8 +325,9 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
     position_to  = fields.Integer(string="Posición final",required=True)
     code_part_pro = fields.Boolean(string="Forma parte del codigo programático")
     is_more_less  = fields.Selection(
-        [('a','aumento'),('r','Reduccion')],
+        [('na','No Aplica'),('a','Aumento'),('r','Reduccion')],
         string='Es aumento o reduccion ?',
+        default = 'na'
     )
     no_catalog = fields.Boolean(
         string='Sin Catalogo',
@@ -400,7 +401,7 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
         if self.is_year == True or self.is_check_digit == True or self.is_key == True or self.is_control_number == True or self.is_date == True or self.is_authorizer == True or self.is_error == True or self.is_agreement_number == True or self.is_type_exercise == True or self.is_amount == True or self.is_cve_mov == True or self.is_number_doc == True or self.is_date_doc == True:
             self.catalog_id = ''
             self.to_search_field = ''
-            self.is_more_less = ''
+            self.is_more_less = 'na'
             self.no_catalog = True
         else:
             self.no_catalog = False
@@ -417,7 +418,7 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
     def _check_digit(self):
         if self.is_check_digit == True:
             search = self.env['budget.structure.adjustement'].search(
-                [('is_check_digit','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
+                [('is_check_digit','=',True),('code_part_pro', '=',True),('id','!=',self.id),('is_more_less','=',self.is_more_less)],limit=1)
             if search:
                 raise ValidationError(_('Solo puede haber un digito verificador por orden programático'))  
 
@@ -427,7 +428,7 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
             search = self.env['budget.structure.adjustement'].search(
                 [('is_key','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
             if search:
-                raise ValidationError(_('Solo puede haber una calve por orden programático')) 
+                raise ValidationError(_('Solo puede haber una clave por orden programático')) 
 
     @api.constrains('is_control_number')
     def _check_control_number(self):
@@ -465,7 +466,7 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
     def _check_agree_number(self):
         if self.is_agreement_number == True:
             search = self.env['budget.structure.adjustement'].search(
-                [('is_agreement_number','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
+                [('is_agreement_number','=',True),('code_part_pro', '=',True),('id','!=',self.id),('is_more_less','=',self.is_more_less)],limit=1)
             if search:
                 raise ValidationError(_('Solo puede haber un convenio por orden programático')) 
 
@@ -473,7 +474,7 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
     def _check_type_ex(self):
         if self.is_type_exercise == True:
             search = self.env['budget.structure.adjustement'].search(
-                [('is_type_exercise','=',True),('code_part_pro', '=',True),('id','!=',self.id)],limit=1)
+                [('is_type_exercise','=',True),('code_part_pro', '=',True),('id','!=',self.id),('is_more_less','=',self.is_more_less)],limit=1)
             if search:
                 raise ValidationError(_('Solo puede haber un tipo por orden programático')) 
 
@@ -520,7 +521,7 @@ class BudgetStructure(models.Model):#modelo para Orden del código programático
                 raise ValidationError(_('Valor Invalido'))
             if val.isdigit():
                 search = self.env['budget.structure.adjustement'].search(
-                    [('catalog_id','=',self.catalog_id.id),('sequence', '!=', self.sequence),('position_from','=',self.position_from),('position_to','=',self.position_to)],limit=1)
+                    [('catalog_id','=',self.catalog_id.id),('sequence', '!=', self.sequence),('position_from','=',self.position_from),('position_to','=',self.position_to),('is_more_less','=',self.is_more_less)],limit=1)
                 if search and self.catalog_id:
                     raise ValidationError(_('Catálogo duplicado, solo puede haber un registro por catálogo '))   
 

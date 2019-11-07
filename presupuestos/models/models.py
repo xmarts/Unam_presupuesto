@@ -502,7 +502,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
 
     file_import  = fields.Binary(string='Archivo de importación')
     filename = fields.Char('file name') 
-    total_budget = fields.Integer(string="Total de presupuesto",readonly=True)
+    total_budget = fields.Integer(string="Total de presupuesto",readonly=True, compute="compute_amount_tb")
     record_numbers = fields.Integer(string="Número de registros",readonly=True)
     imported_registration_numbers = fields.Integer(string="Número de registros importados",readonly=True)
     budget_of_project_dgpo = fields.Boolean(string="Presupuesto de DGPO")
@@ -513,6 +513,14 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
         string='Importación Correcta?',
         default=False
     )
+
+    @api.depends('crossovered_budget_line.authorized_amount')
+    def compute_amount_tb(self):
+        for rec in self:
+            t = 0
+            for x in rec.crossovered_budget_line:
+                t += x.authorized_amount
+            rec.update({'total_budget': t})
 
     #funcion para leer archivos txt 
     @api.onchange('filename')
@@ -606,6 +614,7 @@ class InheritCrossoveredBudget(models.Model):# modelo el cual hace un inherit al
             number_line = 0
             for x in file:
                 pc = ''
+                data_code = ''
                 number_line += 1
                 for y in structure:
                     position = x[y.position_from:y.position_to]
@@ -811,7 +820,9 @@ class InheritCrossoveredBudgetLine(models.Model):# modelo en el cual se hace un 
 
 class BudgetAmountAllocated(models.Model):# modelo para Control de montos asignados pag 24 doc
     _name = 'budget.amount.allocated'
-    code = fields.Char(string="Folio",required=True)
+    _description = "Budget Amount Allocated"
+    code = fields.Char(string="Folio",required=True, default=lambda self: _('New'))
+    name = fields.Char(string="Folio",required=True, compute="get_code")
     budget_id = fields.Many2one('crossovered.budget',string="Presupuesto",required=True)
     description = fields.Char(string="Observaciones")
     date_import = fields.Date(string="Fecha de importación",required=True)
@@ -823,8 +834,8 @@ class BudgetAmountAllocated(models.Model):# modelo para Control de montos asigna
 
     currency_id = fields.Many2one('res.currency', string='Currency')
     assigment_amount = fields.Monetary(string="Monto asignado",digits=(12,2),required=True)
-    deposit_amount = fields.Monetary(string="Monto depositado",required=True,readonly=True)
-    pending_amount = fields.Monetary(string="Monto pendiente",digits=(12,2),readonly=True)
+    deposit_amount = fields.Monetary(string="Monto depositado",required=True,readonly=True, compute="compute_amount_da")
+    pending_amount = fields.Monetary(string="Monto pendiente",digits=(12,2),readonly=True, compute="compute_amount_da")
     deposit_date = fields.Date(string="Fecha depósito")
     deposit_account_bank_id = fields.Many2one('account.journal',string="Cuenta del depósito")
     comments = fields.Text(string="Observaciones")
@@ -838,6 +849,25 @@ class BudgetAmountAllocated(models.Model):# modelo para Control de montos asigna
         string='Importación Correcta?',
         default=False
     )
+
+    def get_code(self):
+        for rec in self:
+            rec.name = rec.code
+
+    @api.model
+    def create(self, vals):
+        seq = self.env['ir.sequence'].get('budget.amount.allocated') or '/'
+        vals['code'] = seq
+        return super(BudgetAmountAllocated, self).create(vals)
+
+    @api.depends('budget_amount_allocated_line_ids')
+    def compute_amount_da(self):
+        for rec in self:
+            t = 0
+            for x in rec.budget_amount_allocated_line_ids:
+                t += x.amount
+            rec.update({'deposit_amount': t})
+            rec.pending_amount = rec.assigment_amount - rec.deposit_amount
 
     @api.onchange('filename')
     def onchange_file(self):
@@ -1153,7 +1183,7 @@ class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
             fobj.write(data)
             fobj.close()
             file = open(fname,"r")
-            structure = self.env['budget.structure'].search([('code_part_pro','=',True)])
+            structure = self.env['budget.structure.adjustement'].search([('code_part_pro','=',True)])
             count_valid = 0
             tot_reg = 0
             message = " ERRORES: "
@@ -1164,12 +1194,13 @@ class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
                 number_line += 1
                 for y in structure:
                     position = x[y.position_from:y.position_to]
-                    if y.catalog_id.model:
+                    pc += str(position + ' ')
+                    if y.to_search_field:
                         search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                         if not search_model:
                             valid = False
                             message += ' Código invalido en el modelo '+ y.catalog_id.name + '. \n'
-                    pc += position + ' '
+                    
                 if valid == True:
                     count_valid += 1
                 else:
@@ -1182,12 +1213,13 @@ class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
             self.record_numbers = tot_reg
             self.imported_registration_numbers = count_valid
             if count_valid == tot_reg:
-                self.create_budget_adjustment_lines_from_file()
+                self.create_budget_adjustment_lines_from_file('a')
+                self.create_budget_adjustment_lines_from_file('r')
         else:
             self.record_numbers = 0
             self.imported_registration_numbers = 0
 
-    def create_budget_adjustment_lines_from_file(self):
+    def create_budget_adjustment_lines_from_file(self,tipo):
         if self.file and (self.record_numbers == self.imported_registration_numbers):
             data = base64.decodestring(self.file)
             fobj = tempfile.NamedTemporaryFile(delete=False)
@@ -1195,7 +1227,7 @@ class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
             fobj.write(data)
             fobj.close()
             file = open(fname,"r")
-            structure = self.env['budget.structure'].search([('code_part_pro','=',True)])
+            structure = self.env['budget.structure.adjustement'].search([('code_part_pro','=',True),('is_more_less','!=',tipo)])
             account_budget_post = False
             for x in file:
                 programmatic_code = ''
@@ -1213,9 +1245,10 @@ class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
                 key_portfolio_id = ''
                 for y in structure:
                     position = x[y.position_from:y.position_to]
+                    print("POSISION :: ",position)
                     programmatic_code += str(position + ' ')
-                    if y.is_authorized_budget == True:
-                        amount = position
+                    if y.is_amount == True:
+                            amount = position
                     if y.catalog_id.model:
                         if y.catalog_id.model == 'budget.subdependence':
                             search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
@@ -1261,6 +1294,12 @@ class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
                             search_model = self.env[str(y.catalog_id.model)].search([(y.to_search_field.name,'=',str(position))])
                             if search_model:
                                 key_portfolio_id = search_model.id
+
+                t = ''
+                if tipo == 'a':
+                    t = 'a'
+                else:
+                    t = 'd'
                 vars = {
                     'adjustement_id':self.id,
                     'programmatic_code':programmatic_code,
@@ -1276,17 +1315,17 @@ class BudgetAdjustement(models.Model):#modelo para las Adecuaciones 6.1
                     'expense_type_id':expense_type_id,
                     'geographic_location_id':geographic_location_id,
                     'key_portfolio_id':key_portfolio_id,
-                    'type':'a'
+                    'type':t
                 }
                 print(vars)
                 budget_adjustement_line = self.env['budget.adjustement.lines'].create(vars)
-            self.correct_import = True
+            # self.correct_import = True
     
 class BudgetAdjustementLines(models.Model):#modelo el cual se muestra en una pestaña con el nombre líneas de adecuación relacionada al budegte adjustement
     _name ='budget.adjustement.lines'
 
     adjustement_id = fields.Many2one('budget.adjustement',string="Adecuación",required=True)
-    programmatic_code = fields.Char(string="Código programático",required=True)
+    programmatic_code = fields.Text(string="Código programático",required=True)
     type = fields.Selection([('a','Aumento'),('d','Disminución')],string="Tipo",required=True, default='a')
     amount = fields.Float(string="Importe",required=True)
     #branch_id = fields.Many2one('res.branch',string="Dependencia",required=True)
@@ -1309,12 +1348,14 @@ class BudgetImportRecalendarization(models.Model):#modelo para Recalendarizacion
     budget_rescheduling_lines = fields.One2many('budget.rescheduling','import_recalendarization_id',string="Recalendarizaciones")
     budget_id = fields.Many2one('crossovered.budget',string="Presupuesto",required=True)
     file = fields.Binary(string="Archivo recalendarización",required=True)
+    file2 = fields.Binary(string="Archivo recalendarización",required=True)
     description = fields.Char(string="Observaciones")
     record_number = fields.Integer(string="Numeros de registros",default=0,readonly=True)
     records_number_imported = fields.Integer(string="Número de registros importados",default=0,readonly=True)
     state = fields.Selection([('draft','Borrador'),('import','Importado'),('reject','Rechazado'),('cancel','Cancelado')],default="draft")
     reason_for_rejection = fields.Char(string="Motivo del rechazo")
     filename = fields.Char()
+    filename2 = fields.Char()
     invalid_rows = fields.One2many('invalid.row','budget_import_recalendarization_id')
     correct_import = fields.Boolean(
         string='Importación Correcta?',
@@ -1382,7 +1423,7 @@ class BudgetImportRecalendarization(models.Model):#modelo para Recalendarizacion
                 tot_reg += 1
             self.record_number = tot_reg
             self.records_number_imported = count_valid
-            if count_valid == tot_reg:
+            if self.record_number == self.records_number_imported:
                 self.create_budget_rescheduling_from_file()
         else:
             self.record_number = 0
@@ -1487,7 +1528,7 @@ class BudgetImportRecalendarization(models.Model):#modelo para Recalendarizacion
                     'code': folio
                 }
                 print(vars)
-                #budget_rescheduling_line = self.env['budget.rescheduling'].create(vars)
+                budget_rescheduling_line = self.env['budget.rescheduling'].create(vars)
             #self.correct_import = True
 
 class BudgetRescheduling(models.Model):# modelo para Control de recalendarizaciones. pag35
